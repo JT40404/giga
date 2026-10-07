@@ -89,6 +89,13 @@ h3 { font-size: 1.2rem; }
 .nav-links { display: flex; gap: 1.3rem; margin-left: auto; }
 .nav-links a { color: var(--muted); text-decoration: none; font-weight: 600; }
 .nav-links a:hover { color: var(--pipe-hi); }
+.x-link {
+  flex: none; font: 700 0.95rem var(--display); text-decoration: none; color: var(--ink);
+  background: var(--cream); border: 2px solid var(--ink); border-radius: 999px;
+  padding: 0.4rem 0.85rem; box-shadow: 0 3px 0 var(--ink);
+}
+.x-link:hover { background: #fff; }
+.x-short { display: none; }
 
 /* Hero: the boiler-room banner with GIGA dancing beside it */
 .hero { padding-top: clamp(1rem, 3vw, 2rem); display: grid; gap: 1.25rem; }
@@ -318,6 +325,8 @@ tbody tr.row:hover { background: rgba(255, 255, 255, 0.03); }
 }
 @media (max-width: 700px) {
   .nav-links { display: none; }
+  .x-long { display: none; }
+  .x-short { display: inline; }
   .brand { margin-right: auto; }
   .boiler { grid-template-columns: 1fr; }
   .boiler-art { height: auto; }
