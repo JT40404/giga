@@ -142,7 +142,7 @@ function startGiga() {
   });
 }
 
-/* ---------- config + $GIGA market ---------- */
+/* ---------- config + $GIGAFUNBOT market ---------- */
 
 async function loadConfig() {
   try {
@@ -204,7 +204,10 @@ async function loadMarket() {
     $("#txns").textContent = m.buys24h != null ? `${compact.format(m.buys24h)} / ${compact.format(m.sells24h ?? 0)}` : "—";
     renderLinks(m.links || {});
     renderChart(m.chart || []);
-    if (first) gig.queue = []; // fresh lines with real numbers
+    if (first) {
+      gig.queue = []; // fresh lines with real numbers
+      nextLine();
+    }
   } catch {
     /* keep the last good readout */
   }

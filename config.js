@@ -2,8 +2,8 @@
 // BOT_NAME, TOKEN_TICKER) override these, so you don't need to edit code at launch.
 export const SITE = {
   name: "GIGAFUNBOT",
-  ticker: "GIGA",
+  ticker: "GIGAFUNBOT",
   mint: "",              // optional fallback contract address
-  marketPollMs: 30000,   // $GIGA readout refresh
+  marketPollMs: 30000,   // $GIGAFUNBOT readout refresh
   boardPollMs: 120000,   // trending board refresh (edge-cached for 2 minutes)
 };

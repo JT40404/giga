@@ -4,7 +4,7 @@ import { getMint, send } from "./_lib/env.js";
 export default function handler(req, res) {
   send(res, 200, {
     name: process.env.BOT_NAME || "GIGAFUNBOT",
-    ticker: process.env.TOKEN_TICKER || "GIGA",
+    ticker: process.env.TOKEN_TICKER || "GIGAFUNBOT",
     mint: getMint(),
   }, 60);
 }

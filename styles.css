@@ -11,7 +11,7 @@
   --steel: #9aa3a0;
   --rust: #b0612f;
   --caution: #e8b41a;
-  --cream: #e7e2c9;       /* gauge faces, GIGA's head */
+  --cream: #e7e2c9;       /* gauge faces, GIGAFUNBOT's head */
   --ink: #131917;
   --text: #e9eee8;
   --muted: #a7b3ac;
@@ -97,7 +97,7 @@ h3 { font-size: 1.2rem; }
 .x-link:hover { background: #fff; }
 .x-short { display: none; }
 
-/* Hero: the boiler-room banner with GIGA dancing beside it */
+/* Hero: the boiler-room banner with GIGAFUNBOT dancing beside it */
 .hero { padding-top: clamp(1rem, 3vw, 2rem); display: grid; gap: 1.25rem; }
 .boiler {
   position: relative;
@@ -160,7 +160,7 @@ h3 { font-size: 1.2rem; }
 @keyframes flip { 0%, 100% { transform: scaleX(1); } 25% { transform: scaleX(0.2) translateY(-3%); } 50% { transform: scaleX(-1); } 75% { transform: scaleX(0.2) translateY(-3%); } }
 @keyframes hop { 0%, 100% { transform: translateY(0) scaleY(1); } 40% { transform: translateY(-14%) scaleY(1.03); } 80% { transform: translateY(0) scaleY(0.92); } }
 
-/* Steam puffs when you poke GIGA */
+/* Steam puffs when you poke GIGAFUNBOT */
 .puff {
   position: absolute; z-index: 1; width: 26px; height: 26px; border-radius: 50%;
   background: rgba(240, 244, 240, 0.85);
@@ -169,7 +169,7 @@ h3 { font-size: 1.2rem; }
 }
 @keyframes puff { from { opacity: 0.9; transform: translateY(0) scale(0.6); } to { opacity: 0; transform: translateY(-90px) scale(1.5); } }
 
-/* $GIGA readout */
+/* $GIGAFUNBOT readout */
 .readout {
   display: grid;
   grid-template-columns: minmax(200px, 1fr) minmax(0, 1.6fr);
@@ -274,7 +274,7 @@ tbody tr.row:hover { background: rgba(255, 255, 255, 0.03); }
 .tag-steps { margin: 1rem 0 0; padding-left: 1.3rem; max-width: 60ch; display: grid; gap: 0.45rem; }
 .tag-steps strong { color: var(--caution); }
 
-/* Ask GIGA */
+/* Ask GIGAFUNBOT */
 .ask { padding: clamp(1.25rem, 3vw, 2rem); display: grid; gap: 1.1rem; }
 .ask label { display: block; font-weight: 600; margin-bottom: 0.4rem; }
 .ask-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }

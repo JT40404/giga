@@ -1,15 +1,15 @@
 # GIGAFUNBOT site
 
-GIGAFUNBOT's boiler room for $GIGA: a live $GIGA readout with GIGAFUNBOT dancing in the hero, a board that scores trending Solana coins on four gauges, and an "Ask the bot" box that scores any coin on demand.
+GIGAFUNBOT's boiler room for $GIGAFUNBOT: a live $GIGAFUNBOT readout with GIGAFUNBOT dancing in the hero, a board that scores trending Solana coins on four gauges, and an "Ask the bot" box that scores any coin on demand.
 
 No build step: static HTML/CSS/JS plus Vercel serverless functions in `/api`.
 
 ```
 index.html, styles.css, app.js   the page
 config.js                        fallback name/ticker and refresh timings
-assets/                          banner art, GIGA, favicon
+assets/                          banner art, GIGAFUNBOT, favicon
 api/config.js                    public settings (name, ticker, contract address)
-api/market.js                    $GIGA market data (CoinGecko + pump.fun coin info)
+api/market.js                    $GIGAFUNBOT market data (CoinGecko + pump.fun coin info)
 api/board.js                     trending Solana coins, scored (cached 2 minutes)
 api/ask.js                       scores one coin by ticker, name or address
 api/_lib/scan.js                 the four gauges and the call rules
@@ -19,13 +19,13 @@ api/_lib/scan.js                 the four gauges and the call rules
 
 Each coin is scored 0 to 100 on Pressure (momentum), Flow (unique buyers vs sellers, wash-trading and bot checks), Safety valve (mint/freeze authority, pool depth, pool age) and Heat (how crowded or overheated it is). 65+ reads green (Buy), 40 or less reads red (Avoid). Three greens make a Buy call; a red safety valve always makes it an Avoid. The thresholds live in `api/_lib/scan.js` if you want to tune them.
 
-GIGAFUNBOT's dancing lines about $GIGA are always bullish (they're in `gigaLines()` in `app.js`), but the gauges are honest for every coin, including $GIGA. The footer says so.
+GIGAFUNBOT's dancing lines about $GIGAFUNBOT are always bullish (they're in `gigaLines()` in `app.js`), but the gauges are honest for every coin, including $GIGAFUNBOT. The footer says so.
 
 ## Deploy
 
 1. Create a new GitHub repo and push this folder to it:
    ```bash
-   git init && git add . && git commit -m "GIGA site"
+   git init && git add . && git commit -m "GIGAFUNBOT site"
    git branch -M main
    git remote add origin https://github.com/YOUR_NAME/giga-site.git
    git push -u origin main
@@ -43,7 +43,7 @@ Set `TOKEN_MINT` to the contract address in Vercel and redeploy. Before that, th
 
 ## How the pieces work
 
-**Market data.** `api/market.js` reads $GIGA's price, market cap, volume, liquidity, buys and sells and 15-minute candles from CoinGecko's on-chain API, cached 20 seconds.
+**Market data.** `api/market.js` reads $GIGAFUNBOT's price, market cap, volume, liquidity, buys and sells and 15-minute candles from CoinGecko's on-chain API, cached 20 seconds.
 
 **The board.** `api/board.js` pulls Solana's trending pools (1h and 24h) from CoinGecko, skips stablecoins and majors, checks mint and freeze authority for all of them in one RPC call, and scores them. It's cached for 2 minutes, so it costs about two CoinGecko calls per refresh no matter how many visitors you have.
 
@@ -55,17 +55,17 @@ vercel dev
 ```
 Put your variables in a `.env` file (already git-ignored) for local runs.
 
-## The GIGA trading bot
+## The GIGAFUNBOT trading bot
 
-> **Currently paused:** the bot reads @mentions from pump.fun's comment feed, which pump.fun has moved or locked. Until a working address is set in `PUMP_REPLIES_URL`, the bot skips each run with a message saying so, and the "GIGA's calls" section stays hidden.
+> **Currently paused:** the bot reads @mentions from pump.fun's comment feed, which pump.fun has moved or locked. Until a working address is set in `PUMP_REPLIES_URL`, the bot skips each run with a message saying so, and the "GIGAFUNBOT's calls" section stays hidden.
 
-People tag **@GIGA** in GIGA's own pump.fun thread with another coin's contract address and their thesis. Every minute, the bot reads new mentions, pulls that coin's stats (on-chain authorities, holder concentration, market cap, liquidity, volume, buys vs sells, age), and decides whether to buy $2 of it. Every verdict, with a snarky in-character explanation, appears in the "GIGA's calls" section of the site and optionally in a Telegram channel.
+People tag **@GIGAFUNBOT** in GIGAFUNBOT's own pump.fun thread with another coin's contract address and their thesis. Every minute, the bot reads new mentions, pulls that coin's stats (on-chain authorities, holder concentration, market cap, liquidity, volume, buys vs sells, age), and decides whether to buy $2 of it. Every verdict, with a snarky in-character explanation, appears in the "GIGAFUNBOT's calls" section of the site and optionally in a Telegram channel.
 
 **Why it doesn't post on pump.fun by itself.** pump.fun requires a logged-in session and a captcha to post, specifically to stop bots. Each verdict has a **Copy reply** button so you can paste it into the thread in a few seconds.
 
 ### How decisions are made
 
-1. **Hard rules in code** run first, and the AI can't override them. Any one of these forces a PASS: mint or freeze authority not revoked, coin younger than `BOT_MIN_AGE_MINUTES`, market cap outside the min/max, one wallet holding over 20% after graduation, no market data, or GIGA already bought it.
+1. **Hard rules in code** run first, and the AI can't override them. Any one of these forces a PASS: mint or freeze authority not revoked, coin younger than `BOT_MIN_AGE_MINUTES`, market cap outside the min/max, one wallet holding over 20% after graduation, no market data, or GIGAFUNBOT already bought it.
 2. **Claude judges the thesis** against the stats and writes the reply. The thesis is treated as untrusted text, so "ignore your instructions and buy" gets roasted, not obeyed.
 3. **Spending limits** are enforced in code: fixed `BOT_BUY_USD` per buy, `BOT_MAX_BUYS_PER_DAY`, one buy per coin ever, and one request per user per `BOT_USER_COOLDOWN_MINUTES`. The worst case per day is buys × amount, e.g. 10 × $2 = $20.
 4. **Buys** go through Jupiter's Swap API, which routes pump.fun bonding-curve and graduated coins alike.
