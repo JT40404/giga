@@ -23,9 +23,8 @@
       </a>
       <nav class="nav-links" aria-label="Main">
         <a href="#board">The board</a>
-        <a href="#tag">Tag the bot</a>
+        <a href="#judge">Judge my wallet</a>
         <a href="#ask">Ask the bot</a>
-        <a href="#gauges">The gauges</a>
         <a href="#method">How it works</a>
       </nav>
       <a class="x-link" href="https://x.com/GIGAFUNBOT" target="_blank" rel="noopener">
@@ -47,6 +46,18 @@
               <img src="/assets/giga-512.png" alt="" width="512" height="512" />
             </button>
           </div>
+        </div>
+
+        <div class="tag plate" id="tag" aria-labelledby="tagTitle">
+          <div class="tag-copy">
+            <h2 id="tagTitle">Tag @GIGAFUNBOT on pump.fun</h2>
+            <p class="lede">Drop a callout on pump.fun, tag <span data-bind="name">GIGAFUNBOT</span>, and he'll reply to your thesis, like asking Grok on X.</p>
+          </div>
+          <ol class="tag-steps">
+            <li>Post a callout on pump.fun and tag <strong>@GIGAFUNBOT</strong>.</li>
+            <li>Include the coin's contract address and your thesis: why you like it.</li>
+            <li>He reads the gauges and replies with his take.</li>
+          </ol>
         </div>
 
         <div class="readout plate" aria-label="$GIGAFUNBOT readout">
@@ -117,17 +128,20 @@
         <p class="footnote">Coins come from Solana's trending pools on CoinGecko, refreshed every couple of minutes. Three green gauges make a Buy. If the safety valve reads red, it's an Avoid no matter what.</p>
       </section>
 
-      <section id="tag" class="block" aria-labelledby="tagTitle">
-        <div class="tag plate">
-          <div class="tag-copy">
-            <h2 id="tagTitle">Tag @GIGAFUNBOT on pump.fun</h2>
-            <p class="lede">Drop a callout on pump.fun, tag <span data-bind="name">GIGAFUNBOT</span>, and he'll reply to your thesis, like asking Grok on X. He checks the coin's stats and tells you exactly what he thinks.</p>
-            <ol class="tag-steps">
-              <li>Post a callout on pump.fun and tag <strong>@GIGAFUNBOT</strong>.</li>
-              <li>Include the coin's contract address and your thesis: why you like it.</li>
-              <li>He reads the gauges and replies with his take.</li>
-            </ol>
+      <section id="judge" class="block" aria-labelledby="judgeTitle">
+        <div class="ask plate">
+          <div>
+            <h2 id="judgeTitle">Judge my wallet</h2>
+            <p class="lede">Paste any Solana wallet address. <span data-bind="name">GIGAFUNBOT</span> reads its recent trades from the blockchain and tells you what kind of trader it is. Brutally.</p>
           </div>
+          <form id="judgeForm">
+            <label for="judgeQ">Solana wallet address</label>
+            <div class="ask-row">
+              <input id="judgeQ" placeholder="e.g. 9xQe…VFin" autocomplete="off" spellcheck="false" maxlength="48" />
+              <button class="btn btn-go" type="submit" id="judgeBtn">Judge it</button>
+            </div>
+          </form>
+          <div id="judgeResult" aria-live="polite"></div>
         </div>
       </section>
 

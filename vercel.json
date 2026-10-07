@@ -1,8 +1,21 @@
 {
   "functions": {
-    "api/bot/tick.js": { "maxDuration": 60 }
+    "api/bot/tick.js": {
+      "maxDuration": 60
+    },
+    "api/wallet.js": {
+      "maxDuration": 30
+    }
   },
   "headers": [
-    { "source": "/assets/(.*)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }] }
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400"
+        }
+      ]
+    }
   ]
 }

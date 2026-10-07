@@ -269,10 +269,36 @@ tbody tr.row:hover { background: rgba(255, 255, 255, 0.03); }
 .detail-links { margin-top: 0.9rem; font-size: 0.9rem; color: var(--muted); }
 .detail-links a { color: var(--pipe-hi); margin-right: 1rem; }
 
-/* Tag @GIGAFUNBOT on pump.fun */
-.tag { padding: clamp(1.25rem, 3vw, 2rem); }
-.tag-steps { margin: 1rem 0 0; padding-left: 1.3rem; max-width: 60ch; display: grid; gap: 0.45rem; }
+/* Tag @GIGAFUNBOT on pump.fun (sits right under the banner) */
+.tag {
+  padding: 1.3rem 1.6rem;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 1rem 2rem; align-items: center;
+  border-color: var(--caution);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 4px 0 #161c1a, 0 0 0 1px rgba(232, 180, 26, 0.25);
+}
+.tag h2 { font-size: clamp(1.35rem, 2.6vw, 1.75rem); color: var(--caution); }
+.tag .lede { margin-top: 0.35rem; }
+.tag-steps { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; counter-reset: tag; }
+.tag-steps li {
+  counter-increment: tag; background: #1f2825; border: 2px solid #151b19; border-radius: 6px;
+  padding: 0.65rem 0.75rem; font-size: 0.95rem; line-height: 1.35;
+}
+.tag-steps li::before { content: counter(tag); display: block; font: 700 1.1rem var(--display); color: var(--caution); margin-bottom: 0.2rem; }
 .tag-steps strong { color: var(--caution); }
+
+/* Judge my wallet */
+.verdict-card { background: #1f2825; border: 2px solid #151b19; border-radius: 6px; padding: 1.1rem; display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 1rem 1.4rem; align-items: start; }
+.verdict-card .dial { max-width: 170px; }
+.verdict-type { font: 700 clamp(1.4rem, 3vw, 1.9rem) var(--display); color: var(--cream); margin: 0 0 0.6rem; }
+.rating-label { text-align: center; font-size: 0.85rem; color: var(--muted); margin: 0.2rem 0 0; }
+.wallet-stats { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.6rem; margin: 0; }
+.wallet-stats div { background: var(--plate); border: 2px solid #151b19; border-radius: 5px; padding: 0.55rem 0.7rem; }
+.wallet-stats dt { font-size: 0.82rem; color: var(--muted); }
+.wallet-stats dd { margin: 0.1rem 0 0; font: 700 1.1rem var(--display); font-variant-numeric: tabular-nums; }
+.wallet-stats small { font: 500 0.78rem var(--body); color: var(--muted); margin-left: 0.25rem; }
+.wallet-notes { grid-column: 1 / -1; margin: 0; padding-left: 1.1rem; color: var(--muted); }
+.holder-line { grid-column: 1 / -1; margin: 0; font-weight: 700; color: var(--caution); }
+.fine { grid-column: 1 / -1; margin: 0; font-size: 0.82rem; color: var(--muted); }
 
 /* Ask GIGAFUNBOT */
 .ask { padding: clamp(1.25rem, 3vw, 2rem); display: grid; gap: 1.1rem; }
@@ -327,6 +353,8 @@ tbody tr.row:hover { background: rgba(255, 255, 255, 0.03); }
   .gauge-cards, .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dials { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .readout { grid-template-columns: 1fr; }
+  .tag { grid-template-columns: 1fr; }
+  .wallet-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 700px) {
   .nav-links { display: none; }
@@ -343,7 +371,9 @@ tbody tr.row:hover { background: rgba(255, 255, 255, 0.03); }
   .links { margin-left: 0; }
 }
 @media (max-width: 520px) {
-  .gauge-cards, .steps, .dials { grid-template-columns: 1fr; }
+  .gauge-cards, .steps, .dials, .tag-steps { grid-template-columns: 1fr; }
+  .verdict-card { grid-template-columns: 1fr; }
+  .verdict-card .dial { margin: 0 auto; }
   .bubble { right: 30%; }
 }
 @media (prefers-reduced-motion: reduce) {

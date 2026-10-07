@@ -71,6 +71,7 @@ function gigaLines() {
     `${T} runs on steam, grit and a very happy robot.`,
     `Poke me again. Plenty more bullish where that came from.`,
     `Tag @GIGAFUNBOT in your pump.fun callouts and I'll judge your thesis.`,
+    `Paste your wallet below and I'll judge your trading. Gently. Mostly.`,
   ];
   if (m.change24h != null) {
     const x = Math.abs(m.change24h).toFixed(1);
@@ -400,11 +401,73 @@ async function ask(e) {
   }
 }
 
+/* ---------- Judge my wallet ---------- */
+
+function fmtHold(min) {
+  if (min == null) return "—";
+  if (min < 60) return `${Math.max(1, Math.round(min))} min`;
+  if (min < 1440) return `${(min / 60).toFixed(1)} h`;
+  return `${(min / 1440).toFixed(1)} days`;
+}
+
+async function judge(e) {
+  e.preventDefault();
+  const q = $("#judgeQ").value.trim();
+  const out = $("#judgeResult");
+  if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(q)) {
+    out.innerHTML = `<p class="ask-error">Paste a full Solana wallet address (32 to 44 characters).</p>`;
+    return;
+  }
+  const btn = $("#judgeBtn");
+  btn.disabled = true;
+  btn.textContent = "Reading the chain…";
+  try {
+    const r = await fetch(`/api/wallet?address=${encodeURIComponent(q)}`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "Couldn't read that wallet.");
+    const s = d.stats;
+    const T = `$${state.ticker}`;
+    const pnl = s.realizedSol;
+    const pnlText = pnl == null || !s.closedPositions ? "—" : `${pnl >= 0 ? "+" : "−"}${Math.abs(pnl).toFixed(2)} SOL`;
+    const pnlUsd = pnl != null && s.closedPositions && s.solUsd ? ` (${pnl >= 0 ? "+" : "−"}${usd(Math.abs(pnl * s.solUsd))})` : "";
+    const holder =
+      d.holdsBotToken === true ? `${T} holder spotted. Instant respect. The furnace salutes you.`
+      : d.holdsBotToken === false ? `Zero ${T} in this wallet. Honestly? That's the real red flag.`
+      : "";
+    out.innerHTML = `<div class="verdict-card">
+      <div>${dial(d.rating, "Trader rating")}<p class="rating-label">Trader rating</p></div>
+      <div>
+        <p class="verdict-type">${esc(d.type)}</p>
+        <div class="giga-says"><img src="/assets/favicon.png" alt="" width="40" height="40" /><p>${esc(d.roast)}</p></div>
+      </div>
+      ${s.trades ? `<dl class="wallet-stats">
+        <div><dt>Trades</dt><dd>${s.trades} <small>(${s.buys} buys / ${s.sells} sells)</small></dd></div>
+        <div><dt>Win rate</dt><dd>${s.winRate == null ? "—" : Math.round(s.winRate * 100) + "%"}</dd></div>
+        <div><dt>Realized P&amp;L</dt><dd class="${pnl >= 0 ? "up" : "down"}">${pnlText}<small>${esc(pnlUsd)}</small></dd></div>
+        <div><dt>Median hold</dt><dd>${fmtHold(s.medianHoldMin)}</dd></div>
+        <div><dt>Coins traded</dt><dd>${s.tokensTraded}</dd></div>
+        <div><dt>Still holding</dt><dd>${s.openBags}</dd></div>
+        <div><dt>Trades per day</dt><dd>${s.tradesPerDay.toFixed(1)}</dd></div>
+        <div><dt>Average buy</dt><dd>${s.avgBuySol == null ? "—" : s.avgBuySol.toFixed(2) + " SOL"}</dd></div>
+      </dl>` : ""}
+      ${d.notes?.length ? `<ul class="wallet-notes">${d.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
+      ${holder ? `<p class="holder-line">${esc(holder)}</p>` : ""}
+      <p class="fine">Based on this wallet's last ${s.txScanned} transactions, read from on-chain balance changes. Realized P&amp;L only counts coins that were sold. For fun, not financial advice.</p>
+    </div>`;
+  } catch (err) {
+    out.innerHTML = `<p class="ask-error">${esc(err.message)}</p>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Judge it";
+  }
+}
+
 /* ---------- wiring ---------- */
 
 function bindUi() {
   $("#copyCa").addEventListener("click", () => copy(state.mint, "Contract address"));
   $("#askForm").addEventListener("submit", ask);
+  $("#judgeForm").addEventListener("submit", judge);
   $("#filters").addEventListener("click", (e) => {
     const b = e.target.closest(".filter");
     if (!b) return;
