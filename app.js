@@ -72,6 +72,7 @@ function gigaLines() {
     `Poke me again. Plenty more bullish where that came from.`,
     `Tag @GIGAFUNBOT in your pump.fun callouts and I'll judge your thesis.`,
     `Paste your wallet below and I'll judge your trading. Gently. Mostly.`,
+    `Longest holders get top spot on my leaderboard. And my eternal respect.`,
   ];
   if (m.change24h != null) {
     const x = Math.abs(m.change24h).toFixed(1);
@@ -401,6 +402,66 @@ async function ask(e) {
   }
 }
 
+/* ---------- Diamond hands leaderboard ---------- */
+
+function heldFor(ms) {
+  const m = Math.floor(ms / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24);
+  if (d >= 1) return `${d}d ${h % 24}h`;
+  if (h >= 1) return `${h}h ${m % 60}m`;
+  return `${Math.max(1, m)}m`;
+}
+
+async function loadLeaderboard() {
+  const body = $("#lbBody");
+  try {
+    const r = await fetch("/api/holders");
+    const d = await r.json();
+    if (!d.configured) {
+      body.innerHTML = `<tr><td colspan="6" class="empty">The leaderboard opens at launch. Get in early and get your name on it.</td></tr>`;
+      return;
+    }
+    if (!r.ok || !d.board?.length) throw new Error(d.error || "empty");
+    state.lb = d.board;
+    $("#lbNote").textContent = `Holding time counts from the first time a wallet received the token. Checked the ${d.scanned} biggest of ${d.holders.toLocaleString("en-US")} holders; pools, the bonding curve and other program-owned accounts are left out. Updated every 30 minutes.`;
+    renderLeaderboard();
+  } catch {
+    if (!state.lb?.length)
+      body.innerHTML = `<tr><td colspan="6" class="empty">The leaderboard couldn't load right now. It needs a Helius or QuickNode RPC_URL. Retrying shortly.</td></tr>`;
+  }
+}
+
+function renderLeaderboard(found) {
+  const now = Date.now();
+  $("#lbBody").innerHTML = state.lb
+    .map((h) => {
+      const cls = [h.rank <= 3 ? `r${h.rank}` : "", h.wallet === found ? "found" : ""].join(" ").trim();
+      const badges = `${h.og ? '<span class="badge og" title="Bought in the first hour after launch">OG</span>' : ""}${h.dev ? '<span class="badge dev" title="Token creator wallet">DEV</span>' : ""}`;
+      return `<tr class="${cls}" id="lb-${esc(h.wallet)}">
+        <td><span class="rank">${h.rank}</span></td>
+        <td class="lb-wallet"><a href="https://solscan.io/account/${esc(h.wallet)}" target="_blank" rel="noopener">${short(h.wallet)}</a>${badges}</td>
+        <td><span class="held">${heldFor(now - h.since)}</span></td>
+        <td>${new Date(h.since).toLocaleDateString([], { month: "short", day: "numeric" })}</td>
+        <td class="num">${compact.format(h.amount)}</td>
+        <td class="num">${h.pctSupply == null ? "—" : h.pctSupply.toFixed(2) + "%"}</td>
+      </tr>`;
+    })
+    .join("");
+}
+
+function findOnLeaderboard(e) {
+  e.preventDefault();
+  const q = $("#lbQ").value.trim();
+  if (!q || !state.lb?.length) return;
+  const hit = state.lb.find((h) => h.wallet === q);
+  renderLeaderboard(hit?.wallet);
+  if (hit) {
+    document.getElementById(`lb-${hit.wallet}`)?.scrollIntoView({ block: "center", behavior: reducedMotion ? "auto" : "smooth" });
+    toast(`You're #${hit.rank}. Diamond hands confirmed.`);
+  } else {
+    toast(`Not in the top ${state.lb.length} yet. Keep holding.`);
+  }
+}
+
 /* ---------- Judge my wallet ---------- */
 
 function fmtHold(min) {
@@ -468,6 +529,7 @@ function bindUi() {
   $("#copyCa").addEventListener("click", () => copy(state.mint, "Contract address"));
   $("#askForm").addEventListener("submit", ask);
   $("#judgeForm").addEventListener("submit", judge);
+  $("#lbFind").addEventListener("submit", findOnLeaderboard);
   $("#filters").addEventListener("click", (e) => {
     const b = e.target.closest(".filter");
     if (!b) return;
@@ -496,7 +558,8 @@ function poll(fn, ms) {
   bindUi();
   await loadConfig();
   startGiga();
-  await Promise.all([loadMarket(), loadBoard()]);
+  await Promise.all([loadMarket(), loadBoard(), loadLeaderboard()]);
   poll(loadMarket, SITE.marketPollMs);
   poll(loadBoard, SITE.boardPollMs);
+  poll(loadLeaderboard, 10 * 60 * 1000);
 })();

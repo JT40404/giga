@@ -13,6 +13,7 @@ api/market.js                    $GIGAFUNBOT market data (CoinGecko + pump.fun c
 api/board.js                     trending Solana coins, scored (cached 2 minutes)
 api/ask.js                       scores one coin by ticker, name or address
 api/wallet.js                    judges a wallet's recent trading (cached 10 minutes per wallet)
+api/holders.js                   diamond-hands holder leaderboard (rebuilt every 30 minutes)
 api/_lib/scan.js                 the four gauges and the call rules
 ```
 
@@ -49,6 +50,8 @@ Set `TOKEN_MINT` to the contract address in Vercel and redeploy. Before that, th
 **The board.** `api/board.js` pulls Solana's trending pools (1h and 24h) from CoinGecko, skips stablecoins and majors, checks mint and freeze authority for all of them in one RPC call, and scores them. It's cached for 2 minutes, so it costs about two CoinGecko calls per refresh no matter how many visitors you have.
 
 **Judge my wallet.** `api/wallet.js` reads a wallet's last 60 successful transactions through your `RPC_URL`, works out each buy and sell from the wallet's balance changes (pump.fun, Raydium, Jupiter and others all show up the same way), and turns them into a trader type, a 0-100 rating and a roast. Each lookup uses about 60 RPC credits, and results are cached for 10 minutes per wallet. The trader types and roast lines live in `verdict()` in `api/_lib/wallet.js`.
+
+**Leaderboard.** `api/holders.js` lists every current holder with one `getProgramAccounts` call, skips program-owned accounts (pools, the pump.fun bonding curve), takes the 150 biggest holders (change with `LEADERBOARD_SCAN`), finds when each one first received the token, and ranks them by time held. OG means they first got the token within an hour of launch. A rebuild costs a few hundred RPC credits and is cached for 30 minutes. It needs a Helius or QuickNode `RPC_URL`; the public endpoint blocks `getProgramAccounts`. "Held since" counts from the first time a wallet received the token, so someone who sold out and rebought keeps their original date.
 
 ## Local testing
 

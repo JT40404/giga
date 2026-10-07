@@ -23,6 +23,7 @@
       </a>
       <nav class="nav-links" aria-label="Main">
         <a href="#board">The board</a>
+        <a href="#leaderboard">Leaderboard</a>
         <a href="#judge">Judge my wallet</a>
         <a href="#ask">Ask the bot</a>
         <a href="#method">How it works</a>
@@ -126,6 +127,36 @@
           </table>
         </div>
         <p class="footnote">Coins come from Solana's trending pools on CoinGecko, refreshed every couple of minutes. Three green gauges make a Buy. If the safety valve reads red, it's an Avoid no matter what.</p>
+      </section>
+
+      <section id="leaderboard" class="block" aria-labelledby="lbTitle">
+        <div class="section-head">
+          <div>
+            <h2 id="lbTitle">Diamond hands leaderboard</h2>
+            <p class="lede" id="lbSub">The longest current $<span data-bind="ticker">GIGAFUNBOT</span> holders, ranked by how long they've held since launch.</p>
+          </div>
+          <form class="lb-find" id="lbFind">
+            <label class="sr-only" for="lbQ">Find your wallet</label>
+            <input id="lbQ" placeholder="Find your wallet" autocomplete="off" spellcheck="false" maxlength="48" />
+            <button class="btn btn-small" type="submit">Find</button>
+          </form>
+        </div>
+        <div class="board plate">
+          <table class="lb">
+            <thead>
+              <tr>
+                <th scope="col">Rank</th>
+                <th scope="col">Wallet</th>
+                <th scope="col">Holding for</th>
+                <th scope="col">Since</th>
+                <th scope="col" class="num">Bag</th>
+                <th scope="col" class="num">Of supply</th>
+              </tr>
+            </thead>
+            <tbody id="lbBody"><tr><td colspan="6" class="empty">Counting the crew…</td></tr></tbody>
+          </table>
+        </div>
+        <p class="footnote" id="lbNote">Holding time counts from the first time a wallet received the token. Pools, the bonding curve and other program-owned accounts are left out. Updated every 30 minutes.</p>
       </section>
 
       <section id="judge" class="block" aria-labelledby="judgeTitle">
