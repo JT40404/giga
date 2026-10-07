@@ -1,6 +1,6 @@
-# GIGA site
+# GIGAFUNBOT site
 
-GIGA's boiler room: a live $GIGA readout with GIGA dancing in the hero, a board that scores trending Solana coins on four gauges, and an "Ask GIGA" box that scores any coin on demand.
+GIGAFUNBOT's boiler room for $GIGA: a live $GIGA readout with GIGAFUNBOT dancing in the hero, a board that scores trending Solana coins on four gauges, and an "Ask the bot" box that scores any coin on demand.
 
 No build step: static HTML/CSS/JS plus Vercel serverless functions in `/api`.
 
@@ -12,7 +12,6 @@ api/config.js                    public settings (name, ticker, contract address
 api/market.js                    $GIGA market data (CoinGecko + pump.fun coin info)
 api/board.js                     trending Solana coins, scored (cached 2 minutes)
 api/ask.js                       scores one coin by ticker, name or address
-api/rpc.js                       locked-down Solana RPC proxy for wallet balances
 api/_lib/scan.js                 the four gauges and the call rules
 ```
 
@@ -20,7 +19,7 @@ api/_lib/scan.js                 the four gauges and the call rules
 
 Each coin is scored 0 to 100 on Pressure (momentum), Flow (unique buyers vs sellers, wash-trading and bot checks), Safety valve (mint/freeze authority, pool depth, pool age) and Heat (how crowded or overheated it is). 65+ reads green (Buy), 40 or less reads red (Avoid). Three greens make a Buy call; a red safety valve always makes it an Avoid. The thresholds live in `api/_lib/scan.js` if you want to tune them.
 
-GIGA's dancing lines about $GIGA are always bullish (they're in `gigaLines()` in `app.js`), but the gauges are honest for every coin, including $GIGA. The footer says so.
+GIGAFUNBOT's dancing lines about $GIGA are always bullish (they're in `gigaLines()` in `app.js`), but the gauges are honest for every coin, including $GIGA. The footer says so.
 
 ## Deploy
 
@@ -47,8 +46,6 @@ Set `TOKEN_MINT` to the contract address in Vercel and redeploy. Before that, th
 **Market data.** `api/market.js` reads $GIGA's price, market cap, volume, liquidity, buys and sells and 15-minute candles from CoinGecko's on-chain API, cached 20 seconds.
 
 **The board.** `api/board.js` pulls Solana's trending pools (1h and 24h) from CoinGecko, skips stablecoins and majors, checks mint and freeze authority for all of them in one RPC call, and scores them. It's cached for 2 minutes, so it costs about two CoinGecko calls per refresh no matter how many visitors you have.
-
-**Wallet.** Visitors can connect Phantom, Solflare or Backpack to see their $GIGA balance in the nav button.
 
 ## Local testing
 

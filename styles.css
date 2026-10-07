@@ -86,7 +86,7 @@ h3 { font-size: 1.2rem; }
 .nav-inner { display: flex; align-items: center; gap: 1.5rem; padding-top: 0.65rem; padding-bottom: 0.65rem; }
 .brand { display: flex; align-items: center; gap: 0.55rem; text-decoration: none; font: 700 1.45rem var(--display); }
 .brand img { image-rendering: pixelated; }
-.nav-links { display: flex; gap: 1.3rem; margin-right: auto; }
+.nav-links { display: flex; gap: 1.3rem; margin-left: auto; }
 .nav-links a { color: var(--muted); text-decoration: none; font-weight: 600; }
 .nav-links a:hover { color: var(--pipe-hi); }
 

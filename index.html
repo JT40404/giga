@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GIGA — the boiler room</title>
-  <meta name="description" content="GIGA scores trending Solana coins on four gauges and keeps the furnace lit for $GIGA." />
-  <meta property="og:title" content="GIGA" />
-  <meta property="og:description" content="Trending Solana coins, scored live by GIGA. Full steam on $GIGA." />
+  <title>GIGAFUNBOT — the boiler room</title>
+  <meta name="description" content="GIGAFUNBOT scores trending Solana coins on four gauges and keeps the furnace lit for $GIGA." />
+  <meta property="og:title" content="GIGAFUNBOT" />
+  <meta property="og:description" content="Trending Solana coins, scored live by GIGAFUNBOT. Full steam on $GIGA." />
   <meta property="og:image" content="/assets/banner-og.jpg" />
   <link rel="icon" href="/assets/favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -19,28 +19,27 @@
     <div class="wrap nav-inner">
       <a class="brand" href="#top">
         <img src="/assets/favicon.png" alt="" width="30" height="30" />
-        <span data-bind="name">GIGA</span>
+        <span data-bind="name">GIGAFUNBOT</span>
       </a>
       <nav class="nav-links" aria-label="Main">
         <a href="#board">The board</a>
-        <a href="#ask">Ask GIGA</a>
+        <a href="#ask">Ask the bot</a>
         <a href="#gauges">The gauges</a>
         <a href="#method">How it works</a>
       </nav>
-      <button class="btn btn-steel" id="walletBtn" type="button">Connect wallet</button>
     </div>
   </header>
 
   <main id="top">
     <div class="wrap">
-      <section class="hero" aria-label="GIGA">
+      <section class="hero" aria-label="GIGAFUNBOT">
         <div class="boiler">
           <img class="boiler-art" src="/assets/boiler.jpg" alt="Green pipes in a boiler room bent into the letters GIGA" width="768" height="338" />
           <div class="stage" id="stage">
             <figure class="bubble" aria-live="polite">
               <blockquote id="bubbleText">Boiler's warming up…</blockquote>
             </figure>
-            <button class="dancer" id="dancer" type="button" aria-label="Poke GIGA for another line">
+            <button class="dancer" id="dancer" type="button" aria-label="Poke GIGAFUNBOT for another line">
               <img src="/assets/giga-512.png" alt="" width="512" height="512" />
             </button>
           </div>
@@ -48,7 +47,7 @@
 
         <div class="readout plate" aria-label="$GIGA readout">
           <div class="readout-price">
-            <h1><span data-bind="name">GIGA</span> <span class="ticker">$<span data-bind="ticker">GIGA</span></span></h1>
+            <h1>$<span data-bind="ticker">GIGA</span> <span class="ticker">readout</span></h1>
             <p class="price" id="price">—</p>
             <p class="change" id="change">Launching soon</p>
           </div>
@@ -72,7 +71,7 @@
     <div class="hazard" role="note">
       <div class="wrap hazard-inner">
         <span class="hazard-sign" aria-hidden="true">!</span>
-        <p>GIGA is an automated robot, not a person, and nothing here is financial advice. Meme coins can go to zero in minutes. Never trade more than you can afford to lose.</p>
+        <p><span data-bind="name">GIGAFUNBOT</span> is an automated robot, not a person, and nothing here is financial advice. Meme coins can go to zero in minutes. Never trade more than you can afford to lose.</p>
       </div>
     </div>
 
@@ -103,7 +102,7 @@
                 <th scope="col">Flow</th>
                 <th scope="col">Safety</th>
                 <th scope="col">Heat</th>
-                <th scope="col">GIGA's call</th>
+                <th scope="col">The bot's call</th>
               </tr>
             </thead>
             <tbody id="boardBody">
@@ -117,8 +116,8 @@
       <section id="ask" class="block" aria-labelledby="askTitle">
         <div class="ask plate">
           <div>
-            <h2 id="askTitle">Ask GIGA about a coin</h2>
-            <p class="lede">Paste a token address for an exact match, or try a ticker. GIGA reads all four gauges on the spot.</p>
+            <h2 id="askTitle">Ask <span data-bind="name">GIGAFUNBOT</span> about a coin</h2>
+            <p class="lede">Paste a token address for an exact match, or try a ticker. The bot reads all four gauges on the spot.</p>
           </div>
           <form id="askForm">
             <label for="askQ">Ticker, name or token address</label>
@@ -155,7 +154,7 @@
 
   <footer class="foot">
     <div class="wrap">
-      <p>GIGA publishes automated opinions for entertainment only. Nothing here is financial, investment or tax advice, or a recommendation to buy or sell anything, including $<span data-bind="ticker">GIGA</span>. GIGA is always bullish on $<span data-bind="ticker">GIGA</span>; it's a robot mascot, so weigh that accordingly. Market data from CoinGecko. Do your own research.</p>
+      <p><span data-bind="name">GIGAFUNBOT</span> publishes automated opinions for entertainment only. Nothing here is financial, investment or tax advice, or a recommendation to buy or sell anything, including $<span data-bind="ticker">GIGA</span>. <span data-bind="name">GIGAFUNBOT</span> is always bullish on $<span data-bind="ticker">GIGA</span>; it's a robot mascot, so weigh that accordingly. Market data from CoinGecko. Do your own research.</p>
     </div>
   </footer>
 

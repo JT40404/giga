@@ -1,8 +1,5 @@
 import { SITE } from "./config.js";
 
-const WEB3_URL = "https://esm.sh/@solana/web3.js@1.98.0";
-const SPL_URL = "https://esm.sh/@solana/spl-token@0.4.9?deps=@solana/web3.js@1.98.0";
-
 const $ = (s, r = document) => r.querySelector(s);
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -14,10 +11,6 @@ const state = {
   calls: [],
   filter: "ALL",
   open: new Set(),
-  wallet: null,
-  provider: null,
-  balance: null,
-  mintInfo: null,
 };
 
 /* ---------- formatting ---------- */
@@ -56,7 +49,7 @@ async function copy(text, label) {
   }
 }
 
-/* ---------- GIGA: dancing and talking ---------- */
+/* ---------- GIGAFUNBOT: dancing and talking ---------- */
 
 function gigaLines() {
   const T = `$${state.ticker}`;
@@ -359,7 +352,7 @@ function renderGaugeCards() {
     .join("");
 }
 
-/* ---------- Ask GIGA ---------- */
+/* ---------- Ask the bot ---------- */
 
 function quip(call) {
   if (state.mint && call.coin.address === state.mint)
@@ -384,7 +377,7 @@ async function ask(e) {
   try {
     const r = await fetch(`/api/ask?q=${encodeURIComponent(q)}`);
     const d = await r.json();
-    if (!r.ok) throw new Error(d.error || "GIGA couldn't read that coin.");
+    if (!r.ok) throw new Error(d.error || `${state.name} couldn't read that coin.`);
     const call = d.call, c = call.coin;
     out.innerHTML = `<div class="ask-card">
       <div class="ask-head">${coinImg(c, 40)}
@@ -403,76 +396,9 @@ async function ask(e) {
   }
 }
 
-/* ---------- wallet (balance only) ---------- */
-
-function getProvider() {
-  return window.phantom?.solana || window.solflare || window.backpack?.solana || window.solana || null;
-}
-
-let solPromise;
-function solana() {
-  solPromise ??= Promise.all([import(WEB3_URL), import(SPL_URL)]).then(([web3, spl]) => ({
-    web3,
-    spl,
-    conn: new web3.Connection(`${location.origin}/api/rpc`, "confirmed"),
-  }));
-  return solPromise;
-}
-
-async function refreshBalance() {
-  renderWallet();
-  if (!state.mint || !state.wallet) return;
-  try {
-    const { web3, spl, conn } = await solana();
-    if (!state.mintInfo) {
-      const pk = new web3.PublicKey(state.mint);
-      const acc = await conn.getAccountInfo(pk);
-      if (!acc) return;
-      state.mintInfo = { pk, programId: acc.owner };
-    }
-    const { pk, programId } = state.mintInfo;
-    const ata = spl.getAssociatedTokenAddressSync(pk, new web3.PublicKey(state.wallet), false, programId);
-    const b = await conn.getTokenAccountBalance(ata).catch(() => null);
-    state.balance = b ? Number(b.value.uiAmountString) : 0;
-  } catch {
-    state.balance = null;
-  }
-  renderWallet();
-}
-
-function renderWallet() {
-  const btn = $("#walletBtn");
-  if (!state.wallet) return void (btn.textContent = "Connect wallet");
-  btn.textContent = state.balance != null && state.mint ? `${short(state.wallet)} · ${compact.format(state.balance)} $${state.ticker}` : short(state.wallet);
-}
-
-async function toggleWallet() {
-  if (state.wallet) {
-    state.provider?.disconnect?.();
-    state.wallet = null;
-    state.balance = null;
-    return renderWallet();
-  }
-  const p = getProvider();
-  if (!p) {
-    toast("No Solana wallet found. Install Phantom, then reload.");
-    window.open("https://phantom.app/download", "_blank", "noopener");
-    return;
-  }
-  try {
-    const res = await p.connect();
-    state.provider = p;
-    state.wallet = (res?.publicKey || p.publicKey).toString();
-    refreshBalance();
-  } catch {
-    toast("Wallet connection cancelled.");
-  }
-}
-
 /* ---------- wiring ---------- */
 
 function bindUi() {
-  $("#walletBtn").addEventListener("click", toggleWallet);
   $("#copyCa").addEventListener("click", () => copy(state.mint, "Contract address"));
   $("#askForm").addEventListener("submit", ask);
   $("#filters").addEventListener("click", (e) => {
@@ -506,13 +432,4 @@ function poll(fn, ms) {
   await Promise.all([loadMarket(), loadBoard()]);
   poll(loadMarket, SITE.marketPollMs);
   poll(loadBoard, SITE.boardPollMs);
-  const p = getProvider();
-  p?.connect?.({ onlyIfTrusted: true })
-    .then((res) => {
-      if (!(res?.publicKey || p.publicKey)) return;
-      state.provider = p;
-      state.wallet = (res?.publicKey || p.publicKey).toString();
-      refreshBalance();
-    })
-    .catch(() => {});
 })();
