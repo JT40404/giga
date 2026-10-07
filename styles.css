@@ -269,6 +269,11 @@ tbody tr.row:hover { background: rgba(255, 255, 255, 0.03); }
 .detail-links { margin-top: 0.9rem; font-size: 0.9rem; color: var(--muted); }
 .detail-links a { color: var(--pipe-hi); margin-right: 1rem; }
 
+/* Tag @GIGAFUNBOT on pump.fun */
+.tag { padding: clamp(1.25rem, 3vw, 2rem); }
+.tag-steps { margin: 1rem 0 0; padding-left: 1.3rem; max-width: 60ch; display: grid; gap: 0.45rem; }
+.tag-steps strong { color: var(--caution); }
+
 /* Ask GIGA */
 .ask { padding: clamp(1.25rem, 3vw, 2rem); display: grid; gap: 1.1rem; }
 .ask label { display: block; font-weight: 600; margin-bottom: 0.4rem; }

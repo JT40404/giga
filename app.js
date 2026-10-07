@@ -70,6 +70,7 @@ function gigaLines() {
     `Pressure's building. Hear the pipes rattle? That's ${T}.`,
     `${T} runs on steam, grit and a very happy robot.`,
     `Poke me again. Plenty more bullish where that came from.`,
+    `Tag @GIGAFUNBOT in your pump.fun callouts and I'll judge your thesis.`,
   ];
   if (m.change24h != null) {
     const x = Math.abs(m.change24h).toFixed(1);
