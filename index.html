@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GIGA — live callouts &amp; tips</title>
+  <meta name="description" content="Live market data and pump.fun callouts for GIGA. Tip the callers you agree with." />
+  <meta property="og:title" content="GIGA" />
+  <meta property="og:description" content="Live callouts from the pump.fun thread. Tip the good ones." />
+  <meta property="og:image" content="/assets/giga-512.png" />
+  <link rel="icon" href="/assets/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Onest:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="/">
+      <img src="/assets/favicon.png" alt="" width="32" height="32" />
+      <span data-bind="name">GIGA</span>
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#market">Market</a>
+      <a href="#callouts">Callouts</a>
+    </nav>
+    <button class="btn btn-wallet" id="walletBtn" type="button">Connect wallet</button>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="botName">
+      <div class="shell">
+        <img class="bot" src="/assets/giga-512.png" alt="GIGA, a round cream robot with green arms" width="512" height="512" />
+        <div class="identity">
+          <h1 id="botName" data-bind="name">GIGA</h1>
+          <p class="ticker">$<span data-bind="ticker">GIGA</span></p>
+          <div class="ca" id="caRow">
+            <span class="ca-label">CA</span>
+            <code id="caText">Announced at launch</code>
+            <button class="btn btn-ghost" id="copyCa" type="button" hidden>Copy</button>
+          </div>
+          <div class="links" id="tokenLinks"></div>
+        </div>
+        <figure class="bubble" aria-live="polite">
+          <blockquote id="bubbleText">Watching the pump.fun thread. The newest callout shows up here.</blockquote>
+          <figcaption id="bubbleWho"></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <div class="layout">
+      <div class="col-main">
+        <section class="panel" id="market" aria-labelledby="marketTitle">
+          <div class="price-head">
+            <div>
+              <h2 id="marketTitle" class="sr-only">Market</h2>
+              <p class="price" id="price">—</p>
+              <p class="change" id="change">Waiting for launch</p>
+            </div>
+            <p class="updated" id="updated"></p>
+          </div>
+          <div class="chart" id="chart" role="img" aria-label="Price over the last 24 hours">
+            <p class="chart-empty">The price chart appears once the token is trading.</p>
+          </div>
+          <dl class="stats">
+            <div><dt>Market cap</dt><dd id="mcap">—</dd></div>
+            <div><dt>24h volume</dt><dd id="vol">—</dd></div>
+            <div><dt>Liquidity</dt><dd id="liq">—</dd></div>
+            <div><dt>24h buys / sells</dt><dd id="txns">—</dd></div>
+          </dl>
+        </section>
+
+        <section class="panel" id="callouts" aria-labelledby="calloutsTitle">
+          <div class="section-head">
+            <h2 id="calloutsTitle">Callouts</h2>
+            <a class="btn btn-ghost" id="postLink" href="https://pump.fun" target="_blank" rel="noopener">Post on pump.fun</a>
+          </div>
+          <p class="hint">Pulled live from the token's pump.fun thread. Tip a caller to send them $<span data-bind="ticker">GIGA</span> straight from your wallet.</p>
+          <ol class="thread" id="thread"></ol>
+          <button class="btn btn-ghost more" id="moreBtn" type="button" hidden>Load older callouts</button>
+        </section>
+      </div>
+
+      <aside class="col-side">
+        <section class="panel wallet-panel" aria-labelledby="walletTitle">
+          <h2 id="walletTitle">Your wallet</h2>
+          <div id="walletBody">
+            <p class="muted">Connect Phantom, Solflare or Backpack to tip callers.</p>
+          </div>
+        </section>
+        <section class="panel" aria-labelledby="howTitle">
+          <h2 id="howTitle">How tipping works</h2>
+          <ol class="steps">
+            <li>Connect a Solana wallet holding $<span data-bind="ticker">GIGA</span>.</li>
+            <li>Press <strong>Tip</strong> on a callout you rate and pick an amount.</li>
+            <li>Approve in your wallet. Tokens go directly to the caller's pump.fun wallet; this site never holds funds.</li>
+          </ol>
+        </section>
+      </aside>
+    </div>
+  </main>
+
+  <footer class="foot">
+    <p>Market data from CoinGecko. Callouts from pump.fun. Nothing here is financial advice; memecoins are extremely volatile.</p>
+  </footer>
+
+  <dialog class="tip-dialog" id="tipDialog" aria-labelledby="tipTitle">
+    <form method="dialog" id="tipForm">
+      <h2 id="tipTitle">Tip <span id="tipWho"></span></h2>
+      <p class="tip-quote" id="tipQuote"></p>
+      <fieldset class="presets" id="presets">
+        <legend>Amount of $<span data-bind="ticker">GIGA</span></legend>
+      </fieldset>
+      <label class="custom">
+        <span>Custom amount</span>
+        <input id="tipAmount" inputmode="decimal" autocomplete="off" placeholder="0" />
+      </label>
+      <p class="tip-status" id="tipStatus" role="status"></p>
+      <div class="tip-actions">
+        <button class="btn btn-ghost" value="cancel" formnovalidate>Cancel</button>
+        <button class="btn btn-tip" id="tipSend" type="button">Send tip</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
