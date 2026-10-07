@@ -1,11 +1,7 @@
 import { SITE } from "./config.js";
 
-// Solana libraries load only when someone connects a wallet or tips,
-// so the page itself stays light.
 const WEB3_URL = "https://esm.sh/@solana/web3.js@1.98.0";
 const SPL_URL = "https://esm.sh/@solana/spl-token@0.4.9?deps=@solana/web3.js@1.98.0";
-const BUFFER_URL = "https://esm.sh/buffer@6.0.3";
-const MEMO_PROGRAM = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
 
 const $ = (s, r = document) => r.querySelector(s);
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -14,42 +10,33 @@ const state = {
   name: SITE.name,
   ticker: SITE.ticker,
   mint: SITE.mint || null,
+  market: null,
+  calls: [],
+  filter: "ALL",
+  open: new Set(),
   wallet: null,
   provider: null,
   balance: null,
   mintInfo: null,
-  callouts: [],
-  offset: 0,
-  newestId: null,
-  tipTarget: null,
 };
 
 /* ---------- formatting ---------- */
 
 const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 2 });
-const usdCompact = (n) => (n == null || !isFinite(n) ? "—" : "$" + compact.format(n));
+const usd = (n) => (n == null || !isFinite(n) ? "—" : "$" + compact.format(n));
 const short = (a) => (a ? `${a.slice(0, 4)}…${a.slice(-4)}` : "");
 const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const pctHtml = (x) =>
+  x == null || !isFinite(x) ? "—" : `<span class="${x >= 0 ? "up" : "down"}">${x >= 0 ? "+" : ""}${Math.abs(x) >= 100 ? Math.round(x) : x.toFixed(1)}%</span>`;
 
-// Tiny memecoin prices read better as $0.0₅4123 (pump.fun style).
+// Tiny memecoin prices read better as $0.0₅4123
 function priceHtml(n) {
   if (n == null || !isFinite(n)) return "—";
   if (n >= 1) return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 4 });
-  if (n >= 0.0001) return "$" + n.toPrecision(4).replace(/0+$/, "");
-  const [, exp] = n.toExponential(3).split("e-");
-  const zeros = Number(exp) - 1;
-  const digits = n.toExponential(3).split("e")[0].replace(".", "").replace(/0+$/, "");
-  return `$0.0<sub>${zeros}</sub>${digits}`;
-}
-
-function timeAgo(ts) {
-  if (!ts) return "";
-  const s = Math.max(1, Math.round((Date.now() - ts) / 1000));
-  if (s < 60) return `${s}s ago`;
-  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
-  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
-  return `${Math.floor(s / 86400)}d ago`;
+  if (n >= 0.0001) return "$" + n.toPrecision(4).replace(/0+$/, "").replace(/\.$/, "");
+  const [mant, exp] = n.toExponential(3).split("e-");
+  return `$0.0<sub>${Number(exp) - 1}</sub>${mant.replace(".", "").replace(/0+$/, "")}`;
 }
 
 function toast(msg) {
@@ -57,35 +44,111 @@ function toast(msg) {
   t.textContent = msg;
   t.classList.add("show");
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => t.classList.remove("show"), 3500);
+  toast._t = setTimeout(() => t.classList.remove("show"), 3200);
 }
 
-// Deterministic pixel avatar for callers without a profile image.
-const identicons = new Map();
-function identicon(seed) {
-  if (identicons.has(seed)) return identicons.get(seed);
-  let h = 2166136261;
-  for (const ch of seed) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
-  const c = document.createElement("canvas");
-  c.width = c.height = 5;
-  const g = c.getContext("2d");
-  const palette = ["#5fd36e", "#ff6d8f", "#ebe4cf", "#7fb0ff", "#f5c542"];
-  g.fillStyle = "#1b2533";
-  g.fillRect(0, 0, 5, 5);
-  g.fillStyle = palette[Math.abs(h) % palette.length];
-  for (let y = 0; y < 5; y++)
-    for (let x = 0; x < 3; x++) {
-      if ((h >>> (y * 3 + x)) & 1) {
-        g.fillRect(x, y, 1, 1);
-        g.fillRect(4 - x, y, 1, 1);
-      }
+async function copy(text, label) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(`${label} copied`);
+  } catch {
+    toast("Copy failed. Select the text and copy it manually.");
+  }
+}
+
+/* ---------- GIGA: dancing and talking ---------- */
+
+function gigaLines() {
+  const T = `$${state.ticker}`;
+  const m = state.market;
+  if (!state.mint || !m?.configured) {
+    return [
+      `Boiler's warming up. ${T} lights the furnace soon.`,
+      `Contract address drops at launch. I'm already dancing.`,
+      `Stoking the fire for ${T}. Stay close to the pipes.`,
+      `Poke me. I've got steam to spare.`,
+    ];
+  }
+  const lines = [
+    `Full steam ahead for ${T}!`,
+    `Every pipe in this boiler room leads to ${T}.`,
+    `I don't sleep. I watch gauges. My favorite one says ${T}.`,
+    `Holders keep the furnace lit. Thank you, crew!`,
+    `Pressure's building. Hear the pipes rattle? That's ${T}.`,
+    `${T} runs on steam, grit and a very happy robot.`,
+    `Poke me again. Plenty more bullish where that came from.`,
+  ];
+  if (m.change24h != null) {
+    const x = Math.abs(m.change24h).toFixed(1);
+    lines.push(m.change24h >= 0 ? `${T} is up ${x}% today. Needles in the green!` : `Down ${x}% today? That's a refuel stop. Furnace is still lit.`);
+  }
+  if (m.marketCap) lines.push(`${T} market cap is ${usd(m.marketCap)}. Plenty of room in this boiler.`);
+  if (m.buys24h != null && m.sells24h != null && m.buys24h > m.sells24h)
+    lines.push(`${compact.format(m.buys24h)} buys vs ${compact.format(m.sells24h)} sells today. The crew is stoking!`);
+  if (m.volume24h) lines.push(`${usd(m.volume24h)} of volume through the pipes in 24 hours. Choo choo.`);
+  return lines;
+}
+
+const gig = { queue: [], lastLine: "", typing: null };
+
+function nextLine() {
+  if (!gig.queue.length) gig.queue = gigaLines().sort(() => Math.random() - 0.5);
+  let line = gig.queue.pop();
+  if (line === gig.lastLine && gig.queue.length) line = gig.queue.pop();
+  gig.lastLine = line;
+  say(line);
+}
+
+function say(text) {
+  const q = $("#bubbleText");
+  clearInterval(gig.typing);
+  if (reducedMotion) return void (q.textContent = text);
+  let i = 0;
+  q.textContent = "";
+  gig.typing = setInterval(() => {
+    q.textContent = text.slice(0, ++i);
+    if (i >= text.length) clearInterval(gig.typing);
+  }, 22);
+}
+
+const MOVES = ["move-bob", "move-sway", "move-shimmy", "move-flip"];
+function dance(move) {
+  const d = $("#dancer");
+  d.classList.remove(...MOVES, "move-hop");
+  void d.offsetWidth; // restart the animation
+  d.classList.add(move || MOVES[Math.floor(Math.random() * MOVES.length)]);
+}
+
+function puff() {
+  if (reducedMotion) return;
+  const stage = $("#stage");
+  for (let i = 0; i < 3; i++) {
+    const p = document.createElement("span");
+    p.className = "puff";
+    p.style.right = `${18 + Math.random() * 40}%`;
+    p.style.top = `${48 + Math.random() * 18}%`;
+    p.style.animationDelay = `${i * 120}ms`;
+    stage.appendChild(p);
+    setTimeout(() => p.remove(), 1500);
+  }
+}
+
+function startGiga() {
+  nextLine();
+  if (!reducedMotion) dance("move-bob");
+  setInterval(() => !document.hidden && nextLine(), 6500);
+  if (!reducedMotion) setInterval(() => !document.hidden && dance(), 3400);
+  $("#dancer").addEventListener("click", () => {
+    if (!reducedMotion) {
+      dance("move-hop");
+      setTimeout(() => dance(), 1150);
     }
-  const url = c.toDataURL();
-  identicons.set(seed, url);
-  return url;
+    puff();
+    nextLine();
+  });
 }
 
-/* ---------- config ---------- */
+/* ---------- config + $GIGA market ---------- */
 
 async function loadConfig() {
   try {
@@ -97,24 +160,22 @@ async function loadConfig() {
       state.mint = c.mint || state.mint;
     }
   } catch {
-    /* running without serverless functions; use config.js */
+    /* running without serverless functions; config.js values stay */
   }
   document.querySelectorAll('[data-bind="name"]').forEach((el) => (el.textContent = state.name));
   document.querySelectorAll('[data-bind="ticker"]').forEach((el) => (el.textContent = state.ticker));
-  document.title = `${state.name} — live callouts & tips`;
-
   if (state.mint) {
     $("#caText").textContent = state.mint;
     $("#copyCa").hidden = false;
-    $("#postLink").href = `https://pump.fun/coin/${state.mint}`;
     renderLinks({});
   }
+  renderChart([]);
 }
 
 function renderLinks(extra) {
   if (!state.mint) return;
   const links = [
-    ["pump.fun", `https://pump.fun/coin/${state.mint}`],
+    ["Buy on pump.fun", `https://pump.fun/coin/${state.mint}`],
     ["Chart", `https://www.geckoterminal.com/solana/tokens/${state.mint}`],
     ["Solscan", `https://solscan.io/token/${state.mint}`],
   ];
@@ -127,158 +188,222 @@ function renderLinks(extra) {
     .join("");
 }
 
-/* ---------- market ---------- */
-
 async function loadMarket() {
   if (!state.mint) return;
   try {
-    const r = await fetch("/api/market");
-    const m = await r.json();
+    const m = await (await fetch("/api/market")).json();
     if (!m.configured) return;
-
+    const first = !state.market;
+    state.market = m;
     $("#price").innerHTML = priceHtml(m.price);
     const ch = $("#change");
     if (m.change24h != null) {
-      const up = m.change24h >= 0;
-      ch.textContent = `${up ? "+" : ""}${m.change24h.toFixed(2)}% in 24h`;
-      ch.className = `change ${up ? "up" : "down"}`;
+      ch.textContent = `${m.change24h >= 0 ? "+" : ""}${m.change24h.toFixed(2)}% in 24h`;
+      ch.className = `change ${m.change24h >= 0 ? "up" : "down"}`;
     } else {
-      ch.textContent = m.errors?.coingecko ? "CoinGecko hasn't indexed this token yet" : "24h change unavailable";
+      ch.textContent = m.errors?.coingecko ? "CoinGecko hasn't picked up $" + state.ticker + " yet" : "24h change unavailable";
       ch.className = "change";
     }
-    $("#mcap").textContent = usdCompact(m.marketCap);
-    $("#vol").textContent = usdCompact(m.volume24h);
-    $("#liq").textContent = usdCompact(m.liquidity);
-    $("#txns").textContent =
-      m.buys24h != null ? `${compact.format(m.buys24h)} / ${compact.format(m.sells24h ?? 0)}` : "—";
-    $("#updated").textContent = `Updated ${new Date(m.updatedAt).toLocaleTimeString()}`;
+    $("#mcap").textContent = usd(m.marketCap);
+    $("#vol").textContent = usd(m.volume24h);
+    $("#liq").textContent = usd(m.liquidity);
+    $("#txns").textContent = m.buys24h != null ? `${compact.format(m.buys24h)} / ${compact.format(m.sells24h ?? 0)}` : "—";
     renderLinks(m.links || {});
     renderChart(m.chart || []);
+    if (first) gig.queue = []; // fresh lines with real numbers
   } catch {
-    $("#updated").textContent = "Market data is unreachable. Retrying shortly.";
+    /* keep the last good readout */
   }
 }
 
-// Stepped line chart: fits GIGA's pixel look and is honest about 15m candles.
 function renderChart(points) {
   const el = $("#chart");
   if (points.length < 2) {
-    el.innerHTML = `<p class="chart-empty">The price chart appears once CoinGecko has trading history for this token.</p>`;
+    el.innerHTML = `<p class="chart-empty">${state.mint ? "The chart fills in once CoinGecko has trading history." : "The chart lights up at launch."}</p>`;
     return;
   }
-  const W = 800, H = 220, P = 8;
+  const W = 600, H = 150, P = 6;
   const ys = points.map((p) => p[1]);
-  const min = Math.min(...ys), max = Math.max(...ys);
-  const span = max - min || max || 1;
+  const min = Math.min(...ys), max = Math.max(...ys), span = max - min || max || 1;
   const x = (i) => P + (i / (points.length - 1)) * (W - P * 2);
   const y = (v) => H - P - ((v - min) / span) * (H - P * 2);
   let d = `M${x(0).toFixed(1)},${y(ys[0]).toFixed(1)}`;
   for (let i = 1; i < ys.length; i++) d += ` H${x(i).toFixed(1)} V${y(ys[i]).toFixed(1)}`;
-  const up = ys[ys.length - 1] >= ys[0];
-  const color = up ? "var(--signal)" : "var(--alarm)";
-  el.innerHTML = `
-    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" shape-rendering="crispEdges">
-      <path d="${d} V${H} H${x(0)} Z" fill="${color}" opacity="0.12"/>
-      <path d="${d}" fill="none" stroke="${color}" stroke-width="3" vector-effect="non-scaling-stroke"/>
-    </svg>`;
+  const color = ys[ys.length - 1] >= ys[0] ? "var(--pipe-hi)" : "#ff8a7d";
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" shape-rendering="crispEdges">
+    <path d="${d} V${H} H${x(0)} Z" fill="${color}" opacity="0.13"/>
+    <path d="${d}" fill="none" stroke="${color}" stroke-width="3" vector-effect="non-scaling-stroke"/></svg>`;
 }
 
-/* ---------- callouts ---------- */
+/* ---------- gauges ---------- */
 
-async function loadCallouts({ older = false } = {}) {
-  const thread = $("#thread");
-  if (!state.mint) {
-    thread.innerHTML = `<li class="thread-empty">Callouts from the pump.fun thread will appear here after launch.</li>`;
-    return;
-  }
-  const offset = older ? state.offset : 0;
+const GAUGES = {
+  pressure: { label: "Pressure", blurb: "Is the price building steam? Rising price, volume picking up speed and buyers in control this hour." },
+  flow: { label: "Flow", blurb: "Who's really trading. More unique buyers than sellers, believable turnover and no bot churn." },
+  safety: { label: "Safety valve", blurb: "Can the dev still print or freeze? Is the pool deep and old enough? A red valve vetoes the coin." },
+  heat: { label: "Heat", blurb: "Is it overheated? Fades coins the crowd already piled into and likes quiet accumulation." },
+};
+
+function dial(score, label) {
+  const cx = 60, cy = 62, r = 48;
+  const pt = (s, rad) => {
+    const a = Math.PI * (1 - s / 100);
+    return [cx + rad * Math.cos(a), cy - rad * Math.sin(a)];
+  };
+  const arc = (a, b, color) => {
+    const [x1, y1] = pt(a, r), [x2, y2] = pt(b, r);
+    return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${color}" stroke-width="9" fill="none"/>`;
+  };
+  const [nx, ny] = pt(score, r - 10);
+  return `<svg class="dial" viewBox="0 0 120 80" role="img" aria-label="${esc(label)} ${score} out of 100">
+    <path d="M8 62 A52 52 0 0 1 112 62 Z" fill="var(--cream)" stroke="var(--ink)" stroke-width="3"/>
+    ${arc(0, 40, "var(--red)")}${arc(40, 65, "var(--caution)")}${arc(65, 100, "var(--pipe)")}
+    <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="5" fill="var(--rust)" stroke="var(--ink)" stroke-width="2"/>
+    <text x="${cx}" y="78" text-anchor="middle" font-family="Pixelify Sans, monospace" font-size="14" font-weight="700" fill="var(--text)">${score}</text>
+  </svg>`;
+}
+
+function coinImg(c, size = 30) {
+  return c.image
+    ? `<img src="${esc(c.image)}" alt="" width="${size}" height="${size}" loading="lazy" />`
+    : `<span class="coin-ph" aria-hidden="true"></span>`;
+}
+
+function dialsHtml(call) {
+  return `<div class="dials">${call.gauges
+    .map(
+      (g) => `<div class="dial-box">
+        ${dial(g.score, GAUGES[g.gauge].label)}
+        <h4>${GAUGES[g.gauge].label} <span class="chip ${g.signal}">${g.signal}</span></h4>
+        <ul>${g.why.map((w) => `<li>${esc(w)}</li>`).join("") || "<li>No strong reading either way.</li>"}</ul>
+      </div>`
+    )
+    .join("")}</div>`;
+}
+
+function coinLinks(c) {
+  const a = esc(c.address);
+  return `<div class="detail-links">
+    ${/pump$/.test(c.address) ? `<a href="https://pump.fun/coin/${a}" target="_blank" rel="noopener">pump.fun</a>` : ""}
+    <a href="https://www.geckoterminal.com/solana/tokens/${a}" target="_blank" rel="noopener">Chart</a>
+    <a href="https://solscan.io/token/${a}" target="_blank" rel="noopener">Solscan</a>
+    <button class="btn btn-small" type="button" data-copy="${a}">Copy CA</button>
+  </div>`;
+}
+
+/* ---------- the board ---------- */
+
+async function loadBoard() {
   try {
-    const r = await fetch(`/api/callouts?offset=${offset}&limit=40`);
-    const data = await r.json();
-    if (data.error && !data.callouts.length) {
-      if (!state.callouts.length)
-        thread.innerHTML = `<li class="thread-empty">${esc(data.error)}. Retrying in a few seconds.</li>`;
-      return;
-    }
-    if (older) {
-      const seen = new Set(state.callouts.map((c) => c.id));
-      state.callouts.push(...data.callouts.filter((c) => !seen.has(c.id)));
-      state.offset += data.callouts.length;
-    } else {
-      const prevIds = new Set(state.callouts.map((c) => c.id));
-      const freshIds = state.callouts.length ? data.callouts.filter((c) => !prevIds.has(c.id)).map((c) => c.id) : [];
-      const olderKept = state.callouts.slice(40);
-      state.callouts = [...data.callouts, ...olderKept.filter((c) => !data.callouts.some((d) => d.id === c.id))];
-      state.offset = Math.max(state.offset, data.callouts.length);
-      state.freshIds = new Set(freshIds);
-    }
-    $("#moreBtn").hidden = !data.hasMore;
-    renderThread();
-    updateBubble();
-  } catch {
-    if (!state.callouts.length)
-      thread.innerHTML = `<li class="thread-empty">Couldn't reach the callout feed. Retrying shortly.</li>`;
+    const r = await fetch("/api/board");
+    const d = await r.json();
+    if (!r.ok || !d.calls?.length) throw new Error(d.error || "empty");
+    state.calls = d.calls;
+    const counts = { BUY: 0, WATCH: 0, AVOID: 0 };
+    d.calls.forEach((c) => counts[c.verdict]++);
+    $("#boardSub").textContent = `${d.calls.length} trending Solana coins, read on four gauges. Updated ${new Date(d.updatedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.`;
+    document.querySelectorAll(".filter").forEach((b) => {
+      const f = b.dataset.f;
+      b.textContent = f === "ALL" ? "All" : `${f[0] + f.slice(1).toLowerCase()} (${counts[f]})`;
+    });
+    renderBoard();
+    renderGaugeCards();
+  } catch (e) {
+    if (!state.calls.length)
+      $("#boardBody").innerHTML = `<tr><td colspan="10" class="empty">The board couldn't load. Check that COINGECKO_API_KEY is set in Vercel. Retrying in a minute.</td></tr>`;
   }
 }
 
-function renderThread() {
-  const thread = $("#thread");
-  if (!state.callouts.length) {
-    thread.innerHTML = `<li class="thread-empty">No callouts yet. Be the first to post one on pump.fun.</li>`;
+function renderBoard() {
+  const rows = state.calls.filter((c) => state.filter === "ALL" || c.verdict === state.filter);
+  if (!rows.length) {
+    $("#boardBody").innerHTML = `<tr><td colspan="10" class="empty">No ${state.filter.toLowerCase()} calls right now.</td></tr>`;
     return;
   }
-  thread.innerHTML = state.callouts
-    .map((c) => {
-      const name = c.username || short(c.wallet) || "anon";
-      const avatar = c.avatar || identicon(c.wallet || c.id);
-      const profile = c.wallet ? `https://pump.fun/profile/${c.wallet}` : null;
-      const badge =
-        c.isBuy === true && c.sol
-          ? `<span class="badge buy">bought ${c.sol.toFixed(2)} SOL</span>`
-          : c.isBuy === false && c.sol
-          ? `<span class="badge sell">sold ${c.sol.toFixed(2)} SOL</span>`
-          : "";
-      const self = c.wallet && c.wallet === state.wallet;
-      const tipBtn = c.wallet
-        ? `<button class="btn btn-tip" type="button" data-tip="${esc(c.id)}" ${self ? 'disabled title="This is your callout"' : ""}>Tip</button>`
-        : "";
-      return `
-        <li class="callout${state.freshIds?.has(c.id) ? " fresh" : ""}">
-          <img class="avatar" src="${esc(avatar)}" alt="" width="40" height="40" loading="lazy" />
-          <div>
-            <div class="meta">
-              ${profile ? `<a class="who" href="${profile}" target="_blank" rel="noopener">${esc(name)}</a>` : `<span class="who">${esc(name)}</span>`}
-              <span>${timeAgo(c.timestamp)}</span>
-              ${badge}
-            </div>
-            ${c.text ? `<p class="callout-text">${esc(c.text)}</p>` : ""}
-            ${c.image ? `<img class="callout-img" src="${esc(c.image)}" alt="Image attached to callout" loading="lazy" />` : ""}
-          </div>
-          ${tipBtn}
-        </li>`;
+  $("#boardBody").innerHTML = rows
+    .map((call) => {
+      const c = call.coin;
+      const open = state.open.has(c.address);
+      const gauge = (g) => `<td><span class="chip ${g.signal}">${g.signal} <small>${g.score}</small></span></td>`;
+      const note = call.vetoed ? "valve shut" : `${call.buyCount}/4 green`;
+      return `<tr class="row">
+          <td><button class="coin-btn" type="button" data-open="${esc(c.address)}" aria-expanded="${open}">
+            ${coinImg(c)}<span><span class="coin-sym">$${esc(c.symbol)}</span><br><span class="coin-more">${open ? "Hide reasoning" : "See reasoning"}</span></span>
+          </button></td>
+          <td class="num">${priceHtml(c.price)}</td>
+          <td class="num">${pctHtml(c.change.h1)}</td>
+          <td class="num">${pctHtml(c.change.h24)}</td>
+          <td class="num">${usd(c.liquidity)}</td>
+          ${call.gauges.map(gauge).join("")}
+          <td><div class="call-cell"><span class="chip big ${call.verdict}">${call.verdict}</span><span class="muted">${note}</span></div></td>
+        </tr>
+        ${open ? `<tr class="detail"><td colspan="10"><p class="detail-summary">${esc(call.summary)}</p>${dialsHtml(call)}${coinLinks(c)}</td></tr>` : ""}`;
     })
     .join("");
 }
 
-// GIGA reads out the newest callout in the hero speech bubble.
-function updateBubble() {
-  const top = state.callouts.find((c) => c.text);
-  if (!top || top.id === state.newestId) return;
-  state.newestId = top.id;
-  const text = top.text.length > 160 ? top.text.slice(0, 157) + "…" : top.text;
-  $("#bubbleWho").textContent = `${top.username || short(top.wallet) || "anon"}, ${timeAgo(top.timestamp)}`;
-  const q = $("#bubbleText");
-  if (reducedMotion) return void (q.textContent = text);
-  clearInterval(updateBubble._t);
-  let i = 0;
-  q.textContent = "";
-  updateBubble._t = setInterval(() => {
-    q.textContent = text.slice(0, ++i);
-    if (i >= text.length) clearInterval(updateBubble._t);
-  }, 18);
+function renderGaugeCards() {
+  $("#gaugeCards").innerHTML = Object.entries(GAUGES)
+    .map(([key, g]) => {
+      const best = state.calls
+        .map((call) => ({ call, gauge: call.gauges.find((x) => x.gauge === key) }))
+        .sort((a, b) => b.gauge.score - a.gauge.score)[0];
+      return `<article class="gauge-card plate">
+        ${dial(best ? best.gauge.score : 50, g.label)}
+        <h3>${g.label}</h3>
+        <p>${g.blurb}</p>
+        <div class="best">${best ? `<span>Highest reading today<br><strong>$${esc(best.call.coin.symbol)}</strong></span><span class="chip ${best.gauge.signal}">${best.gauge.signal}</span>` : "<span>Waiting for today's board</span>"}</div>
+      </article>`;
+    })
+    .join("");
 }
 
-/* ---------- wallet ---------- */
+/* ---------- Ask GIGA ---------- */
+
+function quip(call) {
+  if (state.mint && call.coin.address === state.mint)
+    return `That's me! Obviously I'm bullish: full steam on $${state.ticker}. Here are the honest gauges anyway.`;
+  if (call.vetoed) return "Safety valve's shut on this one. I'm not touching it.";
+  if (call.verdict === "BUY") return `${call.buyCount} of 4 gauges in the green. This one's worth a close look.`;
+  if (call.verdict === "AVOID") return "Too many red needles. Hard pass from the boiler room.";
+  return "Mixed readings. I'd watch this one from the catwalk.";
+}
+
+async function ask(e) {
+  e.preventDefault();
+  const q = $("#askQ").value.trim();
+  const out = $("#askResult");
+  if (!q) {
+    out.innerHTML = `<p class="ask-error">Enter a ticker, name or token address.</p>`;
+    return;
+  }
+  const btn = $("#askBtn");
+  btn.disabled = true;
+  btn.textContent = "Reading…";
+  try {
+    const r = await fetch(`/api/ask?q=${encodeURIComponent(q)}`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || "GIGA couldn't read that coin.");
+    const call = d.call, c = call.coin;
+    out.innerHTML = `<div class="ask-card">
+      <div class="ask-head">${coinImg(c, 40)}
+        <div><h3>$${esc(c.symbol)}</h3><div class="meta">${c.name ? `<span>${esc(c.name)}</span>` : ""}<span>${priceHtml(c.price)}</span><span>${usd(c.liquidity)} liquidity</span><span>${usd(c.marketCap)} market cap</span></div></div>
+        <span class="chip big ${call.verdict}">${call.verdict}</span>
+      </div>
+      <div class="giga-says"><img src="/assets/favicon.png" alt="" width="40" height="40" /><p>${esc(quip(call))}</p></div>
+      ${dialsHtml(call)}
+      ${coinLinks(c)}
+    </div>`;
+  } catch (err) {
+    out.innerHTML = `<p class="ask-error">${esc(err.message)}</p>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Read the gauges";
+  }
+}
+
+/* ---------- wallet (balance only) ---------- */
 
 function getProvider() {
   return window.phantom?.solana || window.solflare || window.backpack?.solana || window.solana || null;
@@ -286,65 +411,26 @@ function getProvider() {
 
 let solPromise;
 function solana() {
-  solPromise ??= Promise.all([import(WEB3_URL), import(SPL_URL), import(BUFFER_URL)]).then(([web3, spl, buf]) => ({
+  solPromise ??= Promise.all([import(WEB3_URL), import(SPL_URL)]).then(([web3, spl]) => ({
     web3,
     spl,
-    Buffer: buf.Buffer,
     conn: new web3.Connection(`${location.origin}/api/rpc`, "confirmed"),
   }));
   return solPromise;
 }
 
-async function getMintInfo() {
-  if (state.mintInfo) return state.mintInfo;
-  const { web3, spl, conn } = await solana();
-  const pk = new web3.PublicKey(state.mint);
-  const acc = await conn.getAccountInfo(pk);
-  if (!acc) throw new Error("The token mint wasn't found on-chain. Check TOKEN_MINT in Vercel.");
-  // Works for both classic SPL and Token-2022 mints.
-  const programId = acc.owner;
-  const mint = await spl.getMint(conn, pk, "confirmed", programId);
-  state.mintInfo = { pk, programId, decimals: mint.decimals };
-  return state.mintInfo;
-}
-
-async function connectWallet() {
-  const p = getProvider();
-  if (!p) {
-    toast("No Solana wallet found. Install Phantom, then reload this page.");
-    window.open("https://phantom.app/download", "_blank", "noopener");
-    return;
-  }
-  try {
-    const res = await p.connect();
-    state.provider = p;
-    state.wallet = (res?.publicKey || p.publicKey).toString();
-    p.on?.("accountChanged", (pk) => {
-      state.wallet = pk ? pk.toString() : null;
-      if (!state.wallet) disconnect();
-      else refreshWallet();
-    });
-    refreshWallet();
-  } catch (e) {
-    toast(e?.message?.includes("User rejected") ? "Connection cancelled." : "Couldn't connect the wallet.");
-  }
-}
-
-function disconnect() {
-  state.provider?.disconnect?.();
-  state.wallet = null;
-  state.balance = null;
+async function refreshBalance() {
   renderWallet();
-  renderThread();
-}
-
-async function refreshWallet() {
-  renderWallet();
-  renderThread();
   if (!state.mint || !state.wallet) return;
   try {
     const { web3, spl, conn } = await solana();
-    const { pk, programId } = await getMintInfo();
+    if (!state.mintInfo) {
+      const pk = new web3.PublicKey(state.mint);
+      const acc = await conn.getAccountInfo(pk);
+      if (!acc) return;
+      state.mintInfo = { pk, programId: acc.owner };
+    }
+    const { pk, programId } = state.mintInfo;
     const ata = spl.getAssociatedTokenAddressSync(pk, new web3.PublicKey(state.wallet), false, programId);
     const b = await conn.getTokenAccountBalance(ata).catch(() => null);
     state.balance = b ? Number(b.value.uiAmountString) : 0;
@@ -356,185 +442,77 @@ async function refreshWallet() {
 
 function renderWallet() {
   const btn = $("#walletBtn");
-  const body = $("#walletBody");
-  if (!state.wallet) {
-    btn.textContent = "Connect wallet";
-    body.innerHTML = `<p class="muted">Connect Phantom, Solflare or Backpack to tip callers.</p>`;
+  if (!state.wallet) return void (btn.textContent = "Connect wallet");
+  btn.textContent = state.balance != null && state.mint ? `${short(state.wallet)} · ${compact.format(state.balance)} $${state.ticker}` : short(state.wallet);
+}
+
+async function toggleWallet() {
+  if (state.wallet) {
+    state.provider?.disconnect?.();
+    state.wallet = null;
+    state.balance = null;
+    return renderWallet();
+  }
+  const p = getProvider();
+  if (!p) {
+    toast("No Solana wallet found. Install Phantom, then reload.");
+    window.open("https://phantom.app/download", "_blank", "noopener");
     return;
   }
-  btn.textContent = short(state.wallet);
-  const bal =
-    state.balance == null ? "—" : state.balance.toLocaleString("en-US", { maximumFractionDigits: 2 });
-  body.innerHTML = `
-    <p class="wallet-addr">${esc(state.wallet)}</p>
-    <p class="wallet-bal">${bal} $${esc(state.ticker)}</p>
-    ${state.mint ? `<a class="btn btn-wallet" href="https://pump.fun/coin/${state.mint}" target="_blank" rel="noopener">Buy $${esc(state.ticker)}</a>` : `<p class="muted">Tipping opens once the token launches.</p>`}`;
-}
-
-/* ---------- tipping ---------- */
-
-function toRaw(str, decimals) {
-  const s = String(str).trim().replace(/,/g, "");
-  if (!/^\d*\.?\d*$/.test(s) || s === "" || s === ".") throw new Error("Enter a number, like 5000.");
-  const [i = "0", f = ""] = s.split(".");
-  const raw = BigInt(i || "0") * 10n ** BigInt(decimals) + BigInt((f + "0".repeat(decimals)).slice(0, decimals) || "0");
-  if (raw <= 0n) throw new Error("Tip amount must be more than zero.");
-  return raw;
-}
-
-function openTip(id) {
-  const c = state.callouts.find((x) => x.id === id);
-  if (!c?.wallet) return;
-  if (!state.mint) return toast("Tipping opens once the token launches.");
-  if (!state.wallet) return connectWallet();
-  state.tipTarget = c;
-  $("#tipWho").textContent = c.username || short(c.wallet);
-  $("#tipQuote").textContent = c.text ? `“${c.text.slice(0, 140)}${c.text.length > 140 ? "…" : ""}”` : "";
-  $("#tipAmount").value = SITE.tipPresets[1];
-  syncPresets();
-  setStatus("");
-  $("#tipSend").disabled = false;
-  $("#tipDialog").showModal();
-}
-
-function syncPresets() {
-  const v = $("#tipAmount").value.replace(/,/g, "");
-  document.querySelectorAll(".preset").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.amount === v)));
-}
-
-function setStatus(html, error = false) {
-  const s = $("#tipStatus");
-  s.innerHTML = html;
-  s.classList.toggle("error", error);
-}
-
-async function waitForConfirmation(conn, sig, timeoutMs = 45000) {
-  const start = Date.now();
-  while (Date.now() - start < timeoutMs) {
-    const { value } = await conn.getSignatureStatuses([sig]);
-    const st = value?.[0];
-    if (st?.err) throw new Error("The transaction failed on-chain.");
-    if (st && (st.confirmationStatus === "confirmed" || st.confirmationStatus === "finalized")) return;
-    await new Promise((r) => setTimeout(r, 1500));
-  }
-  throw new Error("Still waiting on confirmation. Check Solscan in a minute.");
-}
-
-async function sendTip() {
-  const c = state.tipTarget;
-  const btn = $("#tipSend");
-  btn.disabled = true;
   try {
-    setStatus("Preparing the transaction…");
-    const { web3, spl, conn, Buffer } = await solana();
-    const { pk, programId, decimals } = await getMintInfo();
-    const raw = toRaw($("#tipAmount").value, decimals);
-
-    const from = new web3.PublicKey(state.wallet);
-    const to = new web3.PublicKey(c.wallet);
-    const fromAta = spl.getAssociatedTokenAddressSync(pk, from, false, programId);
-    const toAta = spl.getAssociatedTokenAddressSync(pk, to, true, programId);
-
-    const bal = await conn.getTokenAccountBalance(fromAta).catch(() => null);
-    if (!bal || BigInt(bal.value.amount) < raw) throw new Error(`You don't have enough $${state.ticker} for this tip.`);
-
-    const tx = new web3.Transaction();
-    // Creates the caller's token account if they've never held the token (sender pays ~0.002 SOL rent).
-    tx.add(spl.createAssociatedTokenAccountIdempotentInstruction(from, toAta, to, pk, programId));
-    tx.add(spl.createTransferCheckedInstruction(fromAta, pk, toAta, from, raw, decimals, [], programId));
-    tx.add(
-      new web3.TransactionInstruction({
-        programId: new web3.PublicKey(MEMO_PROGRAM),
-        keys: [],
-        data: Buffer.from(`${state.name} tip for callout ${c.id}`.slice(0, 120), "utf8"),
-      })
-    );
-    const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash("confirmed");
-    tx.recentBlockhash = blockhash;
-    tx.lastValidBlockHeight = lastValidBlockHeight;
-    tx.feePayer = from;
-
-    setStatus("Approve the tip in your wallet…");
-    let sig;
-    if (state.provider.signAndSendTransaction) {
-      const r = await state.provider.signAndSendTransaction(tx);
-      sig = r?.signature || r;
-    } else {
-      const signed = await state.provider.signTransaction(tx);
-      sig = await conn.sendRawTransaction(signed.serialize());
-    }
-
-    const link = `https://solscan.io/tx/${sig}`;
-    setStatus(`Sent. Waiting for confirmation… <a href="${link}" target="_blank" rel="noopener">View on Solscan</a>`);
-    await waitForConfirmation(conn, sig);
-    setStatus(`Tip confirmed. <a href="${link}" target="_blank" rel="noopener">View on Solscan</a>`);
-    toast(`Tipped ${c.username || short(c.wallet)}`);
-    refreshWallet();
-  } catch (e) {
-    const msg = e?.message || String(e);
-    setStatus(/reject|cancel/i.test(msg) ? "Tip cancelled in your wallet." : esc(msg), true);
-    btn.disabled = false;
+    const res = await p.connect();
+    state.provider = p;
+    state.wallet = (res?.publicKey || p.publicKey).toString();
+    refreshBalance();
+  } catch {
+    toast("Wallet connection cancelled.");
   }
 }
 
 /* ---------- wiring ---------- */
 
 function bindUi() {
-  $("#walletBtn").addEventListener("click", () => (state.wallet ? disconnect() : connectWallet()));
-  $("#copyCa").addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(state.mint);
-      toast("Contract address copied");
-    } catch {
-      toast("Copy failed. Select the address and copy it manually.");
+  $("#walletBtn").addEventListener("click", toggleWallet);
+  $("#copyCa").addEventListener("click", () => copy(state.mint, "Contract address"));
+  $("#askForm").addEventListener("submit", ask);
+  $("#filters").addEventListener("click", (e) => {
+    const b = e.target.closest(".filter");
+    if (!b) return;
+    state.filter = b.dataset.f;
+    document.querySelectorAll(".filter").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    renderBoard();
+  });
+  document.addEventListener("click", (e) => {
+    const o = e.target.closest("[data-open]");
+    if (o) {
+      const a = o.dataset.open;
+      state.open.has(a) ? state.open.delete(a) : state.open.add(a);
+      renderBoard();
+      return;
     }
+    const c = e.target.closest("[data-copy]");
+    if (c) copy(c.dataset.copy, "Contract address");
   });
-  $("#thread").addEventListener("click", (e) => {
-    const b = e.target.closest("[data-tip]");
-    if (b) openTip(b.dataset.tip);
-  });
-  $("#moreBtn").addEventListener("click", () => loadCallouts({ older: true }));
-
-  const presets = $("#presets");
-  for (const amt of SITE.tipPresets) {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "preset";
-    b.dataset.amount = amt;
-    b.textContent = compact.format(Number(amt));
-    b.addEventListener("click", () => {
-      $("#tipAmount").value = amt;
-      syncPresets();
-    });
-    presets.appendChild(b);
-  }
-  $("#tipAmount").addEventListener("input", syncPresets);
-  $("#tipSend").addEventListener("click", sendTip);
 }
 
 function poll(fn, ms) {
-  setInterval(() => {
-    if (!document.hidden) fn();
-  }, ms);
+  setInterval(() => !document.hidden && fn(), ms);
 }
 
 (async function init() {
   bindUi();
   await loadConfig();
-  renderWallet();
-  await Promise.all([loadMarket(), loadCallouts()]);
-  if (state.mint) {
-    poll(loadMarket, SITE.marketPollMs);
-    poll(() => loadCallouts(), SITE.calloutPollMs);
-  }
-  // Reconnect silently if the wallet already trusts this site.
+  startGiga();
+  await Promise.all([loadMarket(), loadBoard()]);
+  poll(loadMarket, SITE.marketPollMs);
+  poll(loadBoard, SITE.boardPollMs);
   const p = getProvider();
   p?.connect?.({ onlyIfTrusted: true })
     .then((res) => {
       if (!(res?.publicKey || p.publicKey)) return;
       state.provider = p;
       state.wallet = (res?.publicKey || p.publicKey).toString();
-      refreshWallet();
+      refreshBalance();
     })
     .catch(() => {});
 })();
