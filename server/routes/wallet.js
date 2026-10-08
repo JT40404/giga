@@ -1,5 +1,5 @@
-import { send } from "../_lib/env.js";
-import { judgeWallet } from "../_lib/wallet.js";
+import { send } from "../lib/env.js";
+import { judgeWallet } from "../lib/wallet.js";
 
 // Judges a wallet's recent trading. Cached 10 minutes per wallet so repeat
 // lookups don't burn RPC credits.

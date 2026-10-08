@@ -1,6 +1,6 @@
-import { send } from "../_lib/env.js";
-import { listVerdicts, storeConfigured } from "../_lib/bot/store.js";
-import { botKeypair } from "../_lib/bot/trade.js";
+import { send } from "../lib/env.js";
+import { listVerdicts, storeConfigured } from "../lib/bot/store.js";
+import { botKeypair } from "../lib/bot/trade.js";
 
 // Public feed of GIGA's calls for the website.
 export default async function handler(req, res) {
@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   const base = {
     enabled: process.env.BOT_ENABLED === "true",
     dryRun: process.env.BOT_DRY_RUN !== "false",
-    handle: (process.env.BOT_HANDLE || process.env.BOT_NAME || "GIGA").replace(/^@/, ""),
+    handle: (process.env.BOT_HANDLE || process.env.BOT_NAME || "GIGAFUNBOT").replace(/^@/, ""),
     buyUsd: Number(process.env.BOT_BUY_USD || 2),
     botWallet: wallet,
   };

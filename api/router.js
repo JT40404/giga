@@ -1,19 +1,20 @@
 // One function serves every /api/* address (Vercel's Hobby plan caps the number
-// of functions). vercel.json rewrites /api/<path> to /api/router?path=<path>.
+// of functions). All the real code lives in /server, outside /api, so Vercel
+// only ever sees this single file as a function. vercel.json rewrites /api/<path> to /api/router?path=<path>.
 // Each route is loaded only when it's requested, so one route's problem can't
 // break the others.
 const ROUTES = {
-  config: () => import("./_routes/config.js"),
-  market: () => import("./_routes/market.js"),
-  board: () => import("./_routes/board.js"),
-  ask: () => import("./_routes/ask.js"),
-  wallet: () => import("./_routes/wallet.js"),
-  holders: () => import("./_routes/holders.js"),
-  "bot/tick": () => import("./_routes/bot-tick.js"),
-  "bot/verdicts": () => import("./_routes/bot-verdicts.js"),
-  "launch/create": () => import("./_routes/launch-create.js"),
-  "launch/metadata": () => import("./_routes/launch-metadata.js"),
-  "launch/rpc": () => import("./_routes/launch-rpc.js"),
+  config: () => import("../server/routes/config.js"),
+  market: () => import("../server/routes/market.js"),
+  board: () => import("../server/routes/board.js"),
+  ask: () => import("../server/routes/ask.js"),
+  wallet: () => import("../server/routes/wallet.js"),
+  holders: () => import("../server/routes/holders.js"),
+  "bot/tick": () => import("../server/routes/bot-tick.js"),
+  "bot/verdicts": () => import("../server/routes/bot-verdicts.js"),
+  "launch/create": () => import("../server/routes/launch-create.js"),
+  "launch/metadata": () => import("../server/routes/launch-metadata.js"),
+  "launch/rpc": () => import("../server/routes/launch-rpc.js"),
 };
 
 export default async function handler(req, res) {

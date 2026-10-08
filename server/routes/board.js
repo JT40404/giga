@@ -1,5 +1,5 @@
-import { send } from "./_lib/env.js";
-import { trendingBoard } from "./_lib/scan.js";
+import { send } from "../lib/env.js";
+import { trendingBoard } from "../lib/scan.js";
 
 // Trending Solana coins, scored. Cached 2 minutes at the edge so the
 // whole site uses about one CoinGecko call pair per refresh.

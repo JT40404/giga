@@ -1,5 +1,5 @@
-import { send } from "../_lib/env.js";
-import { lookupCoin } from "../_lib/scan.js";
+import { send } from "../lib/env.js";
+import { lookupCoin } from "../lib/scan.js";
 
 export default async function handler(req, res) {
   const q = String(req.query.q || "").slice(0, 80);

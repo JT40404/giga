@@ -1,5 +1,5 @@
-import { getMint, send } from "../_lib/env.js";
-import { getCoinGecko, getPumpCoin } from "../_lib/data.js";
+import { getMint, send } from "../lib/env.js";
+import { getCoinGecko, getPumpCoin } from "../lib/data.js";
 
 export default async function handler(req, res) {
   const mint = getMint();

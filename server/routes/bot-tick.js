@@ -1,12 +1,12 @@
 // The bot's heartbeat. Call it every minute (Vercel Cron on Pro, or a free
 // external scheduler like cron-job.org) with: Authorization: Bearer <CRON_SECRET>
-import { getMint } from "../_lib/env.js";
-import { fetchReplies, pick } from "../_lib/replies.js";
-import { redis, claim, pushVerdict, storeConfigured } from "../_lib/bot/store.js";
-import { analyzeCoin } from "../_lib/bot/analyze.js";
-import { judge } from "../_lib/bot/brain.js";
-import { buyUsd } from "../_lib/bot/trade.js";
-import { notifyTelegram } from "../_lib/bot/notify.js";
+import { getMint } from "../lib/env.js";
+import { fetchReplies, pick } from "../lib/replies.js";
+import { redis, claim, pushVerdict, storeConfigured } from "../lib/bot/store.js";
+import { analyzeCoin } from "../lib/bot/analyze.js";
+import { judge } from "../lib/bot/brain.js";
+import { buyUsd } from "../lib/bot/trade.js";
+import { notifyTelegram } from "../lib/bot/notify.js";
 
 const BASE58_G = /[1-9A-HJ-NP-Za-km-z]{32,44}/g;
 const env = (k, d) => process.env[k] ?? d;

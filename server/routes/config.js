@@ -1,4 +1,4 @@
-import { getMint, send } from "./_lib/env.js";
+import { getMint, send } from "../lib/env.js";
 
 // Public, non-secret site settings. Set TOKEN_MINT in Vercel at launch.
 export default function handler(req, res) {

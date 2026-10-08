@@ -1,5 +1,5 @@
-import { getMint, send } from "./_lib/env.js";
-import { holderLeaderboard } from "./_lib/holders.js";
+import { getMint, send } from "../lib/env.js";
+import { holderLeaderboard } from "../lib/holders.js";
 
 // Holder leaderboard. Rebuilt at most every 30 minutes (edge cache) because
 // each rebuild makes a few hundred RPC calls.

@@ -2,25 +2,25 @@
 
 GIGAFUNBOT's boiler room for $GIGAFUNBOT: a live $GIGAFUNBOT readout with GIGAFUNBOT dancing in the hero, a board that scores trending Solana coins on four gauges, and an "Ask the bot" box that scores any coin on demand.
 
-No build step: static HTML/CSS/JS plus a single Vercel serverless function (`api/router.js`). Vercel's Hobby plan allows 12 functions, so every endpoint lives in `api/_routes/` and `vercel.json` rewrites `/api/<name>` to the router. To add an endpoint, add a file to `api/_routes/` and a line to the `ROUTES` list in `api/router.js`.
+No build step: static HTML/CSS/JS plus a single Vercel serverless function (`api/router.js`). Vercel's Hobby plan allows 12 functions, so all server code lives in `server/` (outside `api/`) and `vercel.json` rewrites `/api/<name>` to the router. To add an endpoint, add a file to `server/routes/` and a line to the `ROUTES` list in `api/router.js`.
 
 ```
 index.html, styles.css, app.js   the page
 config.js                        fallback name/ticker and refresh timings
 assets/                          banner art, GIGAFUNBOT, favicon
 api/router.js                    the ONE serverless function; routes every /api/* address
-api/_routes/config.js            public settings (name, ticker, contract address)
-api/_routes/market.js            $GIGAFUNBOT market data (CoinGecko + pump.fun coin info)
-api/_routes/board.js             trending Solana coins, scored (cached 2 minutes)
-api/_routes/ask.js               scores one coin by ticker, name or address
-api/_routes/wallet.js            judges a wallet's recent trading (cached 10 minutes per wallet)
-api/_routes/holders.js           diamond-hands holder leaderboard (rebuilt every 30 minutes)
-api/_lib/scan.js                 the four gauges and the call rules
+server/routes/config.js            public settings (name, ticker, contract address)
+server/routes/market.js            $GIGAFUNBOT market data (CoinGecko + pump.fun coin info)
+server/routes/board.js             trending Solana coins, scored (cached 2 minutes)
+server/routes/ask.js               scores one coin by ticker, name or address
+server/routes/wallet.js            judges a wallet's recent trading (cached 10 minutes per wallet)
+server/routes/holders.js           diamond-hands holder leaderboard (rebuilt every 30 minutes)
+server/lib/scan.js                 the four gauges and the call rules
 ```
 
 ### The gauges
 
-Each coin is scored 0 to 100 on Pressure (momentum), Flow (unique buyers vs sellers, wash-trading and bot checks), Safety valve (mint/freeze authority, pool depth, pool age) and Heat (how crowded or overheated it is). 65+ reads green (Buy), 40 or less reads red (Avoid). Three greens make a Buy call; a red safety valve always makes it an Avoid. The thresholds live in `api/_lib/scan.js` if you want to tune them.
+Each coin is scored 0 to 100 on Pressure (momentum), Flow (unique buyers vs sellers, wash-trading and bot checks), Safety valve (mint/freeze authority, pool depth, pool age) and Heat (how crowded or overheated it is). 65+ reads green (Buy), 40 or less reads red (Avoid). Three greens make a Buy call; a red safety valve always makes it an Avoid. The thresholds live in `server/lib/scan.js` if you want to tune them.
 
 GIGAFUNBOT's dancing lines about $GIGAFUNBOT are always bullish (they're in `gigaLines()` in `app.js`), but the gauges are honest for every coin, including $GIGAFUNBOT. The footer says so.
 
@@ -50,7 +50,7 @@ Set `TOKEN_MINT` to the contract address in Vercel and redeploy. Before that, th
 
 **The board.** `api/board.js` pulls Solana's trending pools (1h and 24h) from CoinGecko, skips stablecoins and majors, checks mint and freeze authority for all of them in one RPC call, and scores them. It's cached for 2 minutes, so it costs about two CoinGecko calls per refresh no matter how many visitors you have.
 
-**Judge my wallet.** `api/wallet.js` reads a wallet's last 60 successful transactions through your `RPC_URL`, works out each buy and sell from the wallet's balance changes (pump.fun, Raydium, Jupiter and others all show up the same way), and turns them into a trader type, a 0-100 rating and a roast. Each lookup uses about 60 RPC credits, and results are cached for 10 minutes per wallet. The trader types and roast lines live in `verdict()` in `api/_lib/wallet.js`.
+**Judge my wallet.** `api/wallet.js` reads a wallet's last 60 successful transactions through your `RPC_URL`, works out each buy and sell from the wallet's balance changes (pump.fun, Raydium, Jupiter and others all show up the same way), and turns them into a trader type, a 0-100 rating and a roast. Each lookup uses about 60 RPC credits, and results are cached for 10 minutes per wallet. The trader types and roast lines live in `verdict()` in `server/lib/wallet.js`.
 
 **Leaderboard.** `api/holders.js` lists every current holder with one `getProgramAccounts` call, skips program-owned accounts (pools, the pump.fun bonding curve), takes the 150 biggest holders (change with `LEADERBOARD_SCAN`), finds when each one first received the token, and ranks them by time held. OG means they first got the token within an hour of launch. A rebuild costs a few hundred RPC credits and is cached for 30 minutes. It needs a Helius or QuickNode `RPC_URL`; the public endpoint blocks `getProgramAccounts`. "Held since" counts from the first time a wallet received the token, so someone who sold out and rebought keeps their original date.
 
