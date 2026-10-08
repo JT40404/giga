@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Launch a coin — GIGAFUNBOT</title>
+  <link rel="icon" href="/assets/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Jersey+10&family=Barlow+Semi+Condensed:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/launch.css" />
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a class="brand" href="/">
+        <img src="/assets/favicon.png" alt="" width="30" height="30" />
+        <span>GIGAFUNBOT</span>
+      </a>
+      <span class="nav-spacer"></span>
+      <button class="btn btn-steel" id="walletBtn" type="button">Connect wallet</button>
+    </div>
+  </header>
+
+  <main class="wrap launch">
+    <div class="launch-head">
+      <h1>Launch a coin</h1>
+      <p class="lede">Create a token on pump.fun straight from your wallet. You sign everything yourself; this site never holds your keys or your SOL.</p>
+    </div>
+
+    <div class="launch-grid">
+      <form class="plate launch-form" id="launchForm" novalidate>
+        <div class="field">
+          <span class="label">Image <em>required</em></span>
+          <label class="drop" id="drop">
+            <input type="file" id="image" accept="image/png,image/jpeg,image/gif,image/webp" />
+            <span id="dropText">Click or drop an image here<br><small>PNG, JPG, GIF or WEBP, under 2.5 MB. Square works best.</small></span>
+          </label>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label class="label" for="name">Name <em>required</em></label>
+            <input id="name" maxlength="32" autocomplete="off" placeholder="e.g. Steam Rocket" />
+          </div>
+          <div class="field">
+            <label class="label" for="symbol">Ticker <em>required</em></label>
+            <input id="symbol" maxlength="10" autocomplete="off" placeholder="e.g. STEAM" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="description">Description</label>
+          <textarea id="description" maxlength="500" rows="3" placeholder="What's the coin about?"></textarea>
+        </div>
+
+        <details class="more">
+          <summary>Links <span class="muted">(optional)</span></summary>
+          <div class="field"><label class="label" for="twitter">X</label><input id="twitter" placeholder="https://x.com/…" autocomplete="off" /></div>
+          <div class="field"><label class="label" for="telegram">Telegram</label><input id="telegram" placeholder="https://t.me/…" autocomplete="off" /></div>
+          <div class="field"><label class="label" for="website">Website</label><input id="website" placeholder="https://…" autocomplete="off" /></div>
+        </details>
+
+        <div class="field">
+          <label class="label" for="devBuy">Dev buy <span class="muted">(SOL you buy at launch, optional)</span></label>
+          <div class="buy-row">
+            <input id="devBuy" inputmode="decimal" value="0" autocomplete="off" />
+            <div class="presets" role="group" aria-label="Dev buy presets">
+              <button type="button" data-buy="0">0</button>
+              <button type="button" data-buy="0.1">0.1</button>
+              <button type="button" data-buy="0.5">0.5</button>
+              <button type="button" data-buy="1">1</button>
+            </div>
+          </div>
+        </div>
+
+        <details class="more">
+          <summary>Advanced</summary>
+          <div class="field">
+            <label class="label" for="customUri">Metadata URI</label>
+            <input id="customUri" placeholder="https://ipfs.io/ipfs/…" autocomplete="off" />
+            <small class="muted">Only if you've already uploaded your own metadata JSON. Leave blank and the image above is uploaded for you.</small>
+          </div>
+        </details>
+
+        <p class="cost" id="cost"></p>
+        <button class="btn btn-go launch-btn" type="submit" id="launchBtn">Connect wallet to launch</button>
+        <p class="form-error" id="formError" role="alert"></p>
+      </form>
+
+      <aside class="launch-side">
+        <div class="preview plate" aria-label="Preview">
+          <span class="preview-tag">Preview</span>
+          <div class="preview-img" id="pvImg"><span>No image yet</span></div>
+          <p class="preview-name"><strong id="pvSymbol">$TICKER</strong> <span id="pvName">Coin name</span></p>
+          <p class="preview-desc" id="pvDesc">Your description shows here.</p>
+        </div>
+
+        <div class="plate progress" id="progress" hidden>
+          <ol class="steps-list">
+            <li data-step="upload">Upload image and details</li>
+            <li data-step="build">Build the launch transaction</li>
+            <li data-step="sign">Approve in your wallet</li>
+            <li data-step="send">Send to Solana</li>
+            <li data-step="confirm">Confirm</li>
+          </ol>
+          <div id="result"></div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/launch.js"></script>
+</body>
+</html>

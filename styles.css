@@ -98,6 +98,13 @@ h3 { font-size: 1.5rem; }
 }
 .x-link:hover { background: #fff; }
 .x-short { display: none; }
+.launch-link {
+  flex: none; font: 400 1.19rem var(--display); text-decoration: none; color: var(--ink);
+  background: linear-gradient(180deg, var(--pipe-hi), var(--pipe)); border: 2px solid var(--ink); border-radius: 999px;
+  padding: 0.4rem 0.95rem; box-shadow: 0 3px 0 var(--ink);
+}
+.launch-link:hover { filter: brightness(1.08); }
+.launch-link:active { transform: translateY(3px); box-shadow: 0 0 0 var(--ink); }
 
 /* Hero: the boiler-room banner with GIGAFUNBOT dancing beside it */
 .hero { padding-top: clamp(1rem, 3vw, 2rem); display: grid; gap: 1.25rem; }
@@ -386,6 +393,8 @@ tr.found td { background: rgba(232, 180, 26, 0.14); }
   .nav-links { display: none; }
   .x-long { display: none; }
   .x-short { display: inline; }
+  .nav-inner { gap: 0.5rem; }
+  .launch-link, .x-link { padding: 0.35rem 0.7rem; }
   .brand { margin-right: auto; }
   .boiler { grid-template-columns: 1fr; }
   .boiler-art { height: auto; }
@@ -409,6 +418,10 @@ tr.found td { background: rgba(232, 180, 26, 0.14); }
   .lb-find input { flex: 1; width: auto; }
   .verdict-card .dial { margin: 0 auto; }
   .bubble { right: 30%; }
+}
+@media (max-width: 400px) {
+  .brand { font-size: 1.45rem; gap: 0.4rem; }
+  .brand img { width: 26px; height: 26px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }

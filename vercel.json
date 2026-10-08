@@ -8,6 +8,9 @@
     },
     "api/holders.js": {
       "maxDuration": 60
+    },
+    "api/launch/metadata.js": {
+      "maxDuration": 30
     }
   },
   "headers": [
@@ -20,5 +23,6 @@
         }
       ]
     }
-  ]
+  ],
+  "cleanUrls": true
 }
