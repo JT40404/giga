@@ -1,16 +1,7 @@
 {
   "functions": {
-    "api/bot/tick.js": {
+    "api/router.js": {
       "maxDuration": 60
-    },
-    "api/wallet.js": {
-      "maxDuration": 30
-    },
-    "api/holders.js": {
-      "maxDuration": 60
-    },
-    "api/launch/metadata.js": {
-      "maxDuration": 30
     }
   },
   "headers": [
@@ -24,5 +15,11 @@
       ]
     }
   ],
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/router?path=:path*"
+    }
+  ]
 }

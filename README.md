@@ -2,18 +2,19 @@
 
 GIGAFUNBOT's boiler room for $GIGAFUNBOT: a live $GIGAFUNBOT readout with GIGAFUNBOT dancing in the hero, a board that scores trending Solana coins on four gauges, and an "Ask the bot" box that scores any coin on demand.
 
-No build step: static HTML/CSS/JS plus Vercel serverless functions in `/api`.
+No build step: static HTML/CSS/JS plus a single Vercel serverless function (`api/router.js`). Vercel's Hobby plan allows 12 functions, so every endpoint lives in `api/_routes/` and `vercel.json` rewrites `/api/<name>` to the router. To add an endpoint, add a file to `api/_routes/` and a line to the `ROUTES` list in `api/router.js`.
 
 ```
 index.html, styles.css, app.js   the page
 config.js                        fallback name/ticker and refresh timings
 assets/                          banner art, GIGAFUNBOT, favicon
-api/config.js                    public settings (name, ticker, contract address)
-api/market.js                    $GIGAFUNBOT market data (CoinGecko + pump.fun coin info)
-api/board.js                     trending Solana coins, scored (cached 2 minutes)
-api/ask.js                       scores one coin by ticker, name or address
-api/wallet.js                    judges a wallet's recent trading (cached 10 minutes per wallet)
-api/holders.js                   diamond-hands holder leaderboard (rebuilt every 30 minutes)
+api/router.js                    the ONE serverless function; routes every /api/* address
+api/_routes/config.js            public settings (name, ticker, contract address)
+api/_routes/market.js            $GIGAFUNBOT market data (CoinGecko + pump.fun coin info)
+api/_routes/board.js             trending Solana coins, scored (cached 2 minutes)
+api/_routes/ask.js               scores one coin by ticker, name or address
+api/_routes/wallet.js            judges a wallet's recent trading (cached 10 minutes per wallet)
+api/_routes/holders.js           diamond-hands holder leaderboard (rebuilt every 30 minutes)
 api/_lib/scan.js                 the four gauges and the call rules
 ```
 
