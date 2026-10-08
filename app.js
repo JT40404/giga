@@ -259,7 +259,7 @@ function dial(score, label) {
     ${arc(0, 40, "var(--red)")}${arc(40, 65, "var(--caution)")}${arc(65, 100, "var(--pipe)")}
     <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="var(--ink)" stroke-width="3.5" stroke-linecap="round"/>
     <circle cx="${cx}" cy="${cy}" r="5" fill="var(--rust)" stroke="var(--ink)" stroke-width="2"/>
-    <text x="${cx}" y="78" text-anchor="middle" font-family="Pixelify Sans, monospace" font-size="14" font-weight="700" fill="var(--text)">${score}</text>
+    <text x="${cx}" y="78" text-anchor="middle" font-family="Barlow Semi Condensed, Arial Narrow, sans-serif" font-size="16" font-weight="700" fill="var(--text)">${score}</text>
   </svg>`;
 }
 
